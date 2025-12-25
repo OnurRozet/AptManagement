@@ -14,6 +14,6 @@ namespace AptManagement.Domain.Entities
         public  string? TenantName { get; set; }
         public decimal Balance { get; set; } = 0;
         public ICollection<Income> Incomes { get; set; } = [];
-        public ICollection<Expense> Expenses { get; set; } = [];
+        public ICollection<ApartmentDebt> Debts { get; set; } = [];
     }
 }

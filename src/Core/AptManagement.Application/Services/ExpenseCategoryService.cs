@@ -28,8 +28,11 @@ namespace AptManagement.Application.Services
 
             if (expenseCategory == null) return ServiceResult<CreateOrEditResponse>.Error();
 
-            if (expenseCategory.Id > 0) repository.Update(expenseCategory);
-
+            if (expenseCategory.Id > 0)
+            {
+                repository.Update(expenseCategory);
+                return ServiceResult<CreateOrEditResponse>.Success(new CreateOrEditResponse { ID = expenseCategory.Id }, "Başarılı şekilde güncellenmiştir.");
+            }
             await repository.CreateAsync(expenseCategory);
 
             return ServiceResult<CreateOrEditResponse>.Success(new CreateOrEditResponse { ID = expenseCategory.Id }, "Başarılı şekilde oluşturulmuştur.");

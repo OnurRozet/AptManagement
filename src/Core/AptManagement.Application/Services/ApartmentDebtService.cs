@@ -28,8 +28,12 @@ namespace AptManagement.Application.Services
 
             if (apartmentDebt == null) return ServiceResult<CreateOrEditResponse>.Error();
 
-            if (apartmentDebt.Id > 0) repository.Update(apartmentDebt);
+            if (apartmentDebt.Id > 0)
+            {
+                repository.Update(apartmentDebt);
+                return ServiceResult<CreateOrEditResponse>.Success(new CreateOrEditResponse { ID = apartmentDebt.Id }, "Başarılı şekilde güncellenmiştir.");
 
+            }
             await repository.CreateAsync(apartmentDebt);
 
             return ServiceResult<CreateOrEditResponse>.Success(new CreateOrEditResponse { ID = apartmentDebt.Id }, "Başarılı şekilde oluşturulmuştur.");

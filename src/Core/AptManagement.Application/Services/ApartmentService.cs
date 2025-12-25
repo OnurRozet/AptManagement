@@ -26,32 +26,36 @@ namespace AptManagement.Application.Services
             //validasyon ekle
             var validationResult = validator.Validate(newApartment);
 
-            if(!validationResult.IsValid)
+            if (!validationResult.IsValid)
             {
                 var errors = string.Join(", ", validationResult.Errors.Select(e => e.ErrorMessage));
                 return ServiceResult<CreateOrEditResponse>.Error(errors);
             }
 
-            if (newApartment == null) return ServiceResult<CreateOrEditResponse>.Error(); 
+            if (newApartment == null) return ServiceResult<CreateOrEditResponse>.Error();
 
-            if(newApartment.Id > 0)  repository.Update(newApartment);
+            if (newApartment.Id > 0)
+            {
+                repository.Update(newApartment);
+                return ServiceResult<CreateOrEditResponse>.Success(new CreateOrEditResponse { ID = newApartment.Id }, "Başarılı şekilde güncellenmiştir.");
+            }
 
             await repository.CreateAsync(newApartment);
 
-            return ServiceResult<CreateOrEditResponse>.Success(new CreateOrEditResponse { ID= newApartment.Id}, "Başarılı şekilde oluşturulmuştur.");
+            return ServiceResult<CreateOrEditResponse>.Success(new CreateOrEditResponse { ID = newApartment.Id }, "Başarılı şekilde oluşturulmuştur.");
         }
 
         public async Task<bool> DeleteApartmentAsync(int id)
         {
             var apartment = await repository.GetByIdAsync(id);
-            if(apartment == null) return false;
+            if (apartment == null) return false;
             repository.Delete(apartment);
             return true;
         }
 
         public async Task<ServiceResult<SearchResponse<ApartmentResponse>>> Search(ApartmentSearch request)
         {
-            var query =  repository.GetAll();
+            var query = repository.GetAll();
             var filteredQuery = query.WhereIf(request.ApartmentId.HasValue, x => x.Id == request.ApartmentId.Value)
                 .WhereIf(!string.IsNullOrEmpty(request.TenantName), x => x.TenantName == request.TenantName)
                 .Select(x => new ApartmentResponse()
@@ -76,7 +80,7 @@ namespace AptManagement.Application.Services
         {
             var apartment = await repository.GetByIdAsync(id);
 
-            if(apartment == null) return ServiceResult<DetailResponse<Apartment>>.Error("Belirtilen id ye sahip bir daire bulunamadı");
+            if (apartment == null) return ServiceResult<DetailResponse<Apartment>>.Error("Belirtilen id ye sahip bir daire bulunamadı");
 
             return ServiceResult<DetailResponse<Apartment>>.Success(new DetailResponse<Apartment> { Detail = apartment });
         }

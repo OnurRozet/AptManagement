@@ -4,6 +4,7 @@ using AptManagement.Infrastructure.Context;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace AptManagement.Infrastructure.Migrations
 {
     [DbContext(typeof(AptManagementContext))]
-    partial class AptManagementContextModelSnapshot : ModelSnapshot
+    [Migration("20251225102143_added_description_DuesSetting")]
+    partial class added_description_DuesSetting
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -340,9 +343,6 @@ namespace AptManagement.Infrastructure.Migrations
                     b.Property<bool>("IsManager")
                         .HasColumnType("bit");
 
-                    b.Property<decimal>("PaidAmount")
-                        .HasColumnType("decimal(18,2)");
-
                     b.Property<int>("UpdatedBy")
                         .HasColumnType("int");
 
@@ -350,8 +350,6 @@ namespace AptManagement.Infrastructure.Migrations
                         .HasColumnType("datetime2");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("ApartmentId");
 
                     b.ToTable("ApartmentDebts");
                 });
@@ -419,6 +417,9 @@ namespace AptManagement.Infrastructure.Migrations
                     b.Property<decimal>("Amount")
                         .HasColumnType("decimal(18,2)");
 
+                    b.Property<int?>("ApartmentId")
+                        .HasColumnType("int");
+
                     b.Property<int>("CreatedBy")
                         .HasColumnType("int");
 
@@ -456,6 +457,8 @@ namespace AptManagement.Infrastructure.Migrations
                         .HasColumnType("datetime2");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("ApartmentId");
 
                     b.HasIndex("ExpenseCategoryId");
 
@@ -517,9 +520,6 @@ namespace AptManagement.Infrastructure.Migrations
                     b.Property<decimal>("Amount")
                         .HasColumnType("decimal(18,2)");
 
-                    b.Property<int?>("ApartmentDebtId")
-                        .HasColumnType("int");
-
                     b.Property<int>("ApartmentId")
                         .HasColumnType("int");
 
@@ -561,11 +561,7 @@ namespace AptManagement.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ApartmentDebtId");
-
                     b.HasIndex("ApartmentId");
-
-                    b.HasIndex("IncomeCategoryId");
 
                     b.ToTable("Incomes");
                 });
@@ -614,19 +610,27 @@ namespace AptManagement.Infrastructure.Migrations
                     b.ToTable("IncomeCategories");
                 });
 
-            modelBuilder.Entity("AptManagement.Domain.Entities.ApartmentDebt", b =>
+            modelBuilder.Entity("IncomeIncomeCategory", b =>
                 {
-                    b.HasOne("AptManagement.Domain.Entities.Apartment", "Apartment")
-                        .WithMany("Debts")
-                        .HasForeignKey("ApartmentId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                    b.Property<int>("IncomeCategoriesId")
+                        .HasColumnType("int");
 
-                    b.Navigation("Apartment");
+                    b.Property<int>("IncomesId")
+                        .HasColumnType("int");
+
+                    b.HasKey("IncomeCategoriesId", "IncomesId");
+
+                    b.HasIndex("IncomesId");
+
+                    b.ToTable("IncomeIncomeCategory");
                 });
 
             modelBuilder.Entity("AptManagement.Domain.Entities.Expense", b =>
                 {
+                    b.HasOne("AptManagement.Domain.Entities.Apartment", null)
+                        .WithMany("Expenses")
+                        .HasForeignKey("ApartmentId");
+
                     b.HasOne("AptManagement.Domain.Entities.ExpenseCategory", "ExpenseCategory")
                         .WithMany("Expenses")
                         .HasForeignKey("ExpenseCategoryId")
@@ -638,32 +642,33 @@ namespace AptManagement.Infrastructure.Migrations
 
             modelBuilder.Entity("AptManagement.Domain.Entities.Income", b =>
                 {
-                    b.HasOne("AptManagement.Domain.Entities.ApartmentDebt", "ApartmentDebt")
-                        .WithMany()
-                        .HasForeignKey("ApartmentDebtId");
-
                     b.HasOne("AptManagement.Domain.Entities.Apartment", "Apartment")
                         .WithMany("Incomes")
                         .HasForeignKey("ApartmentId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("AptManagement.Domain.Entities.IncomeCategory", "IncomeCategory")
-                        .WithMany("Incomes")
-                        .HasForeignKey("IncomeCategoryId")
+                    b.Navigation("Apartment");
+                });
+
+            modelBuilder.Entity("IncomeIncomeCategory", b =>
+                {
+                    b.HasOne("AptManagement.Domain.Entities.IncomeCategory", null)
+                        .WithMany()
+                        .HasForeignKey("IncomeCategoriesId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Apartment");
-
-                    b.Navigation("ApartmentDebt");
-
-                    b.Navigation("IncomeCategory");
+                    b.HasOne("AptManagement.Domain.Entities.Income", null)
+                        .WithMany()
+                        .HasForeignKey("IncomesId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("AptManagement.Domain.Entities.Apartment", b =>
                 {
-                    b.Navigation("Debts");
+                    b.Navigation("Expenses");
 
                     b.Navigation("Incomes");
                 });
@@ -671,11 +676,6 @@ namespace AptManagement.Infrastructure.Migrations
             modelBuilder.Entity("AptManagement.Domain.Entities.ExpenseCategory", b =>
                 {
                     b.Navigation("Expenses");
-                });
-
-            modelBuilder.Entity("AptManagement.Domain.Entities.IncomeCategory", b =>
-                {
-                    b.Navigation("Incomes");
                 });
 #pragma warning restore 612, 618
         }

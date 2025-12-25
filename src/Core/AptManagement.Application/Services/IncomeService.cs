@@ -28,8 +28,11 @@ namespace AptManagement.Application.Services
 
             if (income == null) return ServiceResult<CreateOrEditResponse>.Error();
 
-            if (income.Id > 0) repository.Update(income);
-
+            if (income.Id > 0)
+            {
+                repository.Update(income);
+                return ServiceResult<CreateOrEditResponse>.Success(new CreateOrEditResponse { ID = income.Id }, "Başarılı şekilde güncellenmiştir.");
+            }
             await repository.CreateAsync(income);
 
             return ServiceResult<CreateOrEditResponse>.Success(new CreateOrEditResponse { ID = income.Id }, "Başarılı şekilde oluşturulmuştur.");

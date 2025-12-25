@@ -28,7 +28,11 @@ namespace AptManagement.Application.Services
 
             if (duesSetting == null) return ServiceResult<CreateOrEditResponse>.Error();
 
-            if (duesSetting.Id > 0) repository.Update(duesSetting);
+            if (duesSetting.Id > 0)
+            {
+                repository.Update(duesSetting);
+                return ServiceResult<CreateOrEditResponse>.Success(new CreateOrEditResponse { ID = duesSetting.Id }, "Başarılı şekilde güncellenmiştir.");
+            }
 
             await repository.CreateAsync(duesSetting);
 
