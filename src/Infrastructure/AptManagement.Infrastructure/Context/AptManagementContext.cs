@@ -1,4 +1,6 @@
 ﻿using AptManagement.Domain.Entities;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -8,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace AptManagement.Infrastructure.Context
 {
-    public class AptManagementContext : DbContext
+    public class AptManagementContext : IdentityDbContext<AppUser, IdentityRole<Guid>,Guid>
     {
         public AptManagementContext(DbContextOptions<AptManagementContext> options) : base(options)
         {
@@ -25,6 +27,8 @@ namespace AptManagement.Infrastructure.Context
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
+            modelBuilder.Entity<AppUser>().ToTable("Users");
+            modelBuilder.Entity<IdentityRole<Guid>>().ToTable("Roles");
             modelBuilder.ApplyConfiguration(new ApartmentConfiguration());
         }
 
