@@ -33,6 +33,7 @@ namespace AptManagement.Infrastructure.Extensions
 
             // AutoMapper - Corrected to use the overload that accepts a configuration action  
             services.AddAutoMapper(cfg => cfg.AddProfile<MappingProfile>());
+           
 
             services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
             services.AddScoped<IApartmentService, ApartmentService>();
@@ -42,6 +43,7 @@ namespace AptManagement.Infrastructure.Extensions
             services.AddScoped<IExpenseService, ExpenseService>();
             services.AddScoped<IExpenseCategoryService, ExpenseCategoryService>();
             services.AddScoped<IApartmentDebtService, ApartmentDebtService>();
+            services.AddScoped<IReportService, ReportService>();
 
             return services;
         }
