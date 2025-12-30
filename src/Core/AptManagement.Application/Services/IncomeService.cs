@@ -41,12 +41,12 @@ namespace AptManagement.Application.Services
             return ServiceResult<CreateOrEditResponse>.Success(new CreateOrEditResponse { ID = income.Id }, "Başarılı şekilde oluşturulmuştur.");
         }
 
-        public async Task<bool> DeleteIncomeAsync(int id)
+        public async Task<ServiceResult<bool>> DeleteIncomeAsync(int id)
         {
             var income = await repository.GetByIdAsync(id);
-            if (income == null) return false;
+            if (income == null) return ServiceResult<bool>.Error("Gelir Silinemedi");
             repository.Delete(income);
-            return true;
+            return ServiceResult<bool>.Success(true);
         }
 
         public async Task<ServiceResult<DetailResponse<IncomeResponse>>> GetIncomeById(int id)

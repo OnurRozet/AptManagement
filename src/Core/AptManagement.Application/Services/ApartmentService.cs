@@ -64,7 +64,7 @@ namespace AptManagement.Application.Services
                     Label = x.Label,
                     OwnerName = x.OwnerName,
                     TenantName = x.TenantName,
-                    Balance = x.Balance,
+                    Balance = x.Debts.Sum(x=>x.Amount),
                 })
                 .OrderBy(x => x.Id)
                 .ToPagedList(request.Page, (int)request.PageSize);

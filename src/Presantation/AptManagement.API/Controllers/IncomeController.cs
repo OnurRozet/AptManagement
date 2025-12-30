@@ -48,7 +48,7 @@ namespace AptManagement.API.Controllers
         public async Task<IActionResult> Delete(int id)
         {
             var entity = await incomeService.DeleteIncomeAsync(id);
-            if (!entity) return NotFound();
+            if (!entity.IsSuccess) return NotFound();
             return Ok(entity);
         }
 

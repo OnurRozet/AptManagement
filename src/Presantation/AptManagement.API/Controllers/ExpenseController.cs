@@ -47,7 +47,7 @@ namespace AptManagement.API.Controllers
         public async Task<IActionResult> Delete(int id)
         {
             var entity = await expenseService.DeleteExpenseAsync(id);
-            if (!entity) return NotFound();
+            if (!entity.IsSuccess) return NotFound();
             return Ok(entity);
         }
     }

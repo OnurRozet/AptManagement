@@ -16,7 +16,7 @@ namespace AptManagement.Application.Interfaces
         Task<ServiceResult<CreateOrEditResponse>> CreateOrEdit(ExpenseDto request);
         Task<ServiceResult<SearchResponse<ExpenseResponse>>> Search(ExpenseSearch request);
         Task<ServiceResult<DetailResponse<ExpenseResponse>>> GetExpenseById(int id);
-        Task<bool> DeleteExpenseAsync(int id); 
+        Task<ServiceResult<bool>> DeleteExpenseAsync(int id); 
         ServiceResult<ExpenseSummaryDto> GetSummaryExpenseReport();
 
     }

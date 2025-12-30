@@ -39,12 +39,12 @@ namespace AptManagement.Application.Services
             return ServiceResult<CreateOrEditResponse>.Success(new CreateOrEditResponse { ID = expense.Id }, "Başarılı şekilde oluşturulmuştur.");
         }
 
-        public async Task<bool> DeleteExpenseAsync(int id)
+        public async Task<ServiceResult<bool>> DeleteExpenseAsync(int id)
         {
             var expense = await repository.GetByIdAsync(id);
-            if (expense == null) return false;
+            if (expense == null) return ServiceResult<bool>.Error("Gider Silinemedi");
             repository.Delete(expense);
-            return true;
+            return ServiceResult<bool>.Success(result:true);
         }
 
         public async Task<ServiceResult<DetailResponse<ExpenseResponse>>> GetExpenseById(int id)
@@ -84,7 +84,7 @@ namespace AptManagement.Application.Services
             return ServiceResult<SearchResponse<ExpenseResponse>>.Success(new SearchResponse<ExpenseResponse>
             {
                 SearchResult = filteredQuery.ToList(),
-                TotalItemCount = filteredQuery.Count()
+                TotalItemCount = query.Count()
             });
         }
         public ServiceResult<ExpenseSummaryDto> GetSummaryExpenseReport()

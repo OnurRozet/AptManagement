@@ -16,7 +16,7 @@ namespace AptManagement.Application.Interfaces
         Task<ServiceResult<CreateOrEditResponse>> CreateOrEdit(IncomeDto request);
         Task<ServiceResult<SearchResponse<IncomeResponse>>> Search(IncomeSearch request);
         Task<ServiceResult<DetailResponse<IncomeResponse>>> GetIncomeById(int id);
-        Task<bool> DeleteIncomeAsync(int id);
+        Task<ServiceResult<bool>> DeleteIncomeAsync(int id);
         ServiceResult<IncomeSummaryDto> GetSummaryIncomeReport();
         Task<List<PaymentMatrixDto>> GetYearlyPaymentMatrixAsync(int year);
     }
