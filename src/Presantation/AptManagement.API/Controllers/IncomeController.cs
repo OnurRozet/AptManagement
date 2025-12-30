@@ -1,6 +1,8 @@
+using AptManagement.Application.Common;
 using AptManagement.Application.Common.Base.Request;
 using AptManagement.Application.Dtos;
 using AptManagement.Application.Interfaces;
+using AptManagement.Application.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -26,6 +28,14 @@ namespace AptManagement.API.Controllers
             return Ok(entity);
         }
 
+        [HttpGet("get-summary-income")]
+        public IActionResult GetSummaryIncomeReport()
+        {
+            var entity = incomeService.GetSummaryIncomeReport();
+            if (entity == null) return NotFound();
+            return Ok(entity);
+        }
+
         [HttpPost]
         public async Task<IActionResult> CreateOrEdit([FromBody] IncomeDto dto)
         {
@@ -40,6 +50,13 @@ namespace AptManagement.API.Controllers
             var entity = await incomeService.DeleteIncomeAsync(id);
             if (!entity) return NotFound();
             return Ok(entity);
+        }
+
+        [HttpGet("payment-matrix/{year}")]
+        public async Task<IActionResult> GetPaymentMatrix(int year)
+        {
+            var data = await incomeService.GetYearlyPaymentMatrixAsync(year);
+            return Ok(ServiceResult<List<PaymentMatrixDto>>.Success(data));
         }
     }
 }

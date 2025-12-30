@@ -2,6 +2,7 @@ using AptManagement.Application.Common;
 using AptManagement.Application.Common.Base.Request;
 using AptManagement.Application.Common.Base.Response;
 using AptManagement.Application.Dtos;
+using AptManagement.Application.Dtos.Reports;
 using AptManagement.Application.Extensions;
 using AptManagement.Application.Interfaces;
 using AptManagement.Domain.Entities;
@@ -67,14 +68,15 @@ namespace AptManagement.Application.Services
                 .WhereIf(request.ExpenseDate.HasValue, x => x.ExpenseDate.Date == request.ExpenseDate.Value.Date)
                 .WhereIf(request.PaymentCategory.HasValue, x => x.PaymentCategory == request.PaymentCategory.Value)
                 .WhereIf(request.ExpenseCategoryId.HasValue && request.ExpenseCategoryId.Value > 0, x => x.ExpenseCategoryId == request.ExpenseCategoryId.Value)
+                .WhereIf(!string.IsNullOrEmpty(request.Keyword), x => x.Title.Contains(request.Keyword) || x.ExpenseCategory.Name.Contains(request.Keyword))
                 .Select(x => new ExpenseResponse()
                 {
                     Id = x.Id,
                     Amount = x.Amount,
                     Title = x.Title,
                     ExpenseDate = x.ExpenseDate,
-                    PaymentCategory = x.PaymentCategory,
-                    ExpenseCategoryId = x.ExpenseCategoryId
+                    ExpenseCategoryId = x.ExpenseCategoryId,
+                    ExpenseCategory = x.ExpenseCategory.Name
                 })
                 .OrderBy(x => x.Id)
                 .ToPagedList(request.Page, (int)request.PageSize);
@@ -82,9 +84,43 @@ namespace AptManagement.Application.Services
             return ServiceResult<SearchResponse<ExpenseResponse>>.Success(new SearchResponse<ExpenseResponse>
             {
                 SearchResult = filteredQuery.ToList(),
-                TotalItemCount = query.Count()
+                TotalItemCount = filteredQuery.Count()
             });
         }
+        public ServiceResult<ExpenseSummaryDto> GetSummaryExpenseReport()
+        {
+            DateTime date = DateTime.Now;
+            int currentYear = DateTime.Now.Year;
+
+
+            var totalRevenue = repository.GetAll().Sum(x => x.Amount);
+
+            var revenueByCurrentMonth = repository.GetAll().Where(x => x.ExpenseDate.Month == date.Month).Sum(x => x.Amount);
+
+            var totalItemCount = repository.GetAll().Count();
+
+            var highestRevenue = repository.GetAll().Where(x => x.ExpenseDate.Year == date.Year)
+                .GroupBy(x => new { x.ExpenseCategory.Name })
+                .Select(g => new HighestFeeCategoryItem
+                {
+                    ExpenseCategoryName = g.Key.Name,
+                    TotalAmount = g.Sum(x => x.Amount),
+                })
+                .OrderByDescending(x => x.TotalAmount)
+                .FirstOrDefault();
+
+            ExpenseSummaryDto expenseSummaryDto = new()
+            {
+                TotalExpense = totalRevenue,
+                TotalExpenseByCurrentMonth = revenueByCurrentMonth,
+                TotalItemCount = totalItemCount,
+                HighestFeeCategory = highestRevenue
+            };
+
+            return ServiceResult<ExpenseSummaryDto>.Success(expenseSummaryDto);
+
+        }
+
     }
 }
 

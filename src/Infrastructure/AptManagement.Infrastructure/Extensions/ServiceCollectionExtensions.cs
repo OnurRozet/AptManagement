@@ -82,6 +82,7 @@ namespace AptManagement.Infrastructure.Extensions
             services.AddScoped<IReportService, ReportService>();
             services.AddScoped<IAuthService, AuthService>();
             services.AddScoped<ITokenService, TokenService>();
+            services.AddScoped<IBankStatementService, BankStatementService>();
 
             return services;
         }

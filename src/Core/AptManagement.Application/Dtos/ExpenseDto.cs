@@ -13,7 +13,7 @@ namespace AptManagement.Application.Dtos
         public string? Title { get; set; }
         public decimal Amount { get; set; }
         public DateTime ExpenseDate { get; set; }
-        public PaymentCategory PaymentCategory { get; set; }
+        //public PaymentCategory PaymentCategory { get; set; }
         public int ExpenseCategoryId { get; set; }
     }
 }

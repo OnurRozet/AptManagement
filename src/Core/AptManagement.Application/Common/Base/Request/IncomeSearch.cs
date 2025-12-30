@@ -14,6 +14,7 @@ namespace AptManagement.Application.Common.Base.Request
         public DateTime? IncomeDate { get; set; }
         public PaymentCategory? PaymentCategory { get; set; }
         public int? IncomeCategoryId { get; set; }
+        public string Keyword { get; set; } = string.Empty;
     }
 }
 

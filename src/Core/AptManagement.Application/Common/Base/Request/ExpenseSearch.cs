@@ -1,4 +1,5 @@
 using AptManagement.Domain.Enums;
+using Microsoft.AspNetCore.Mvc.RazorPages;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,6 +15,7 @@ namespace AptManagement.Application.Common.Base.Request
         public DateTime? ExpenseDate { get; set; }
         public PaymentCategory? PaymentCategory { get; set; }
         public int? ExpenseCategoryId { get; set; }
+        public string Keyword { get; set; } = string.Empty;
     }
 }
 

@@ -1,6 +1,7 @@
 using AptManagement.Application.Common.Base.Request;
 using AptManagement.Application.Dtos;
 using AptManagement.Application.Interfaces;
+using AptManagement.Application.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -22,6 +23,14 @@ namespace AptManagement.API.Controllers
         public async Task<IActionResult> GetAll([FromQuery] ExpenseSearch request)
         {
             var entity = await expenseService.Search(request);
+            if (entity == null) return NotFound();
+            return Ok(entity);
+        }
+
+        [HttpGet("get-summary-expense")]
+        public IActionResult GetSummaryIncomeReport()
+        {
+            var entity = expenseService.GetSummaryExpenseReport();
             if (entity == null) return NotFound();
             return Ok(entity);
         }

@@ -48,7 +48,7 @@ namespace AptManagement.Infrastructure.Repositories
             var query = db.Set<T>().AsNoTracking();
             if (properties.Length != 0)
                 query = properties.Aggregate(query, (current, property) => current.Include(property));
-            return query;
+            return query.Where(x=>x.IsDeleted == false);
         }
 
         public async Task<T?> GetByIdAsync(int id)

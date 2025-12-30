@@ -15,7 +15,10 @@ namespace AptManagement.Application.Common.Base.Response
         public DateTime IncomeDate { get; set; }
         public PaymentCategory PaymentCategory { get; set; }
         public int IncomeCategoryId { get; set; }
+
+        public string IncomeCategory { get; set; } = string.Empty;
         public int ApartmentId { get; set; }
+        public string ApartmentNo { get; set; } = string.Empty;
     }
 }
 

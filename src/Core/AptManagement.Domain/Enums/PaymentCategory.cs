@@ -11,6 +11,7 @@ namespace AptManagement.Domain.Enums
         Dues=1,          // Aidat
         ExtraPayment =2, // Ek Ödeme
         Invoice=3,
-        Maintenance=4    //Bakım-Onarım
+        Maintenance=4,//Bakım-Onarım
+        BankTransfer=5    
     }
 }
