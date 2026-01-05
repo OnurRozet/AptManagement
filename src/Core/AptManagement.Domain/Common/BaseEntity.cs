@@ -15,7 +15,6 @@ namespace AptManagement.Domain.Common
         public int UpdatedBy { get; set; }
         public DateTime DeletedDate { get; set; }
         public int DeletedBy { get; set; }
-        public bool IsManager { get; set; } = false;
         public bool IsDeleted { get; set; } = false;
 
     }

@@ -8,11 +8,17 @@ using AptManagement.Domain.Entities;
 using AptManagement.Domain.Interfaces;
 using AutoMapper;
 using FluentValidation;
+using Microsoft.EntityFrameworkCore;
 using X.PagedList.Extensions;
 
 namespace AptManagement.Application.Services
 {
-    public class DuesSettingService(IRepository<DuesSetting> repository,IMapper mapper, IValidator<DuesSetting> validator) : IDuesSettingService
+    public class DuesSettingService(
+        IRepository<DuesSetting> repository,
+        IRepository<ApartmentDebt> debtRepo,
+        IMapper mapper,
+        IValidator<DuesSetting> validator,
+        IUnitOfWork unitOfWork) : IDuesSettingService
     {
         public async Task<ServiceResult<CreateOrEditResponse>> CreateOrEdit(DuesSettingDto request)
         {
@@ -28,22 +34,32 @@ namespace AptManagement.Application.Services
 
             if (duesSetting == null) return ServiceResult<CreateOrEditResponse>.Error();
 
-            if (duesSetting.Id > 0)
+            return await unitOfWork.ExecuteInTransactionAsync(async () =>
             {
-                repository.Update(duesSetting);
-                return ServiceResult<CreateOrEditResponse>.Success(new CreateOrEditResponse { ID = duesSetting.Id }, "Başarılı şekilde güncellenmiştir.");
-            }
+                if (duesSetting.Id > 0)
+                {
+                    repository.Update(duesSetting);
+                    await ApartmentDebtsUpdate(duesSetting);
+                    return ServiceResult<CreateOrEditResponse>.Success(new CreateOrEditResponse { ID = duesSetting.Id }, "Başarılı şekilde güncellenmiştir.");
+                }
 
-            await repository.CreateAsync(duesSetting);
+                await repository.CreateAsync(duesSetting);
+                await ApartmentDebtsUpdate(duesSetting);
 
-            return ServiceResult<CreateOrEditResponse>.Success(new CreateOrEditResponse { ID = duesSetting.Id }, "Başarılı şekilde oluşturulmuştur.");
+                return ServiceResult<CreateOrEditResponse>.Success(new CreateOrEditResponse { ID = duesSetting.Id }, "Başarılı şekilde oluşturulmuştur.");
+            });
         }
 
         public async Task<bool> DeleteDuesSettingAsync(int id)
         {
-            var duesSetting = await repository.GetByIdAsync(id);
-            if (duesSetting == null) return false;
-            repository.Delete(duesSetting);
+            await unitOfWork.ExecuteInTransactionAsync(async () =>
+            {
+                var duesSetting = await repository.GetByIdAsync(id);
+                if (duesSetting == null) return false;
+                repository.Delete(duesSetting);
+                return true;
+
+            });
             return true;
         }
 
@@ -73,7 +89,8 @@ namespace AptManagement.Application.Services
                     IsActive = x.IsActive,
                     Description = x.Description
                 })
-                .OrderBy(x => x.Id)
+                .OrderByDescending(x => x.StartDate)
+                .ThenByDescending(x => x.Id)
                 .ToPagedList(request.Page, (int)request.PageSize);
 
             return ServiceResult<SearchResponse<DuesSettingResponse>>.Success(new SearchResponse<DuesSettingResponse>
@@ -81,6 +98,17 @@ namespace AptManagement.Application.Services
                 SearchResult = filteredQuery.ToList(),
                 TotalItemCount = query.Count()
             });
+        }
+
+        private async Task ApartmentDebtsUpdate(DuesSetting duesSetting)
+        {
+            var currentYear = DateTime.Now.Year;
+            var debts = await debtRepo.GetAll().Where(x => x.DueDate.Year == currentYear).ToListAsync();
+
+            foreach (var item in debts)
+            {
+                item.Amount = duesSetting.Amount;
+            }
         }
     }
 }

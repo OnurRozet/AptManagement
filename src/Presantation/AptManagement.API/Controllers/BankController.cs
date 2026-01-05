@@ -17,7 +17,7 @@ public class BankController : ControllerBase
 
     // 1. ADIM: Excel Yükle ve Önizleme Al
     [HttpPost("upload")]
-    public IActionResult Upload(IFormFile file)
+    public async Task<IActionResult> Upload(IFormFile file)
     {
         if (file == null || file.Length == 0)
             return BadRequest("Dosya seçilmedi.");
@@ -31,7 +31,7 @@ public class BankController : ControllerBase
         {
             using (var stream = file.OpenReadStream())
             {
-                var transactions = _bankService.ParseExcelFile(stream);
+                var transactions = await _bankService.ParseExcelFile(stream);
                 return Ok(transactions);
             }
         }

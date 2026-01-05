@@ -6,29 +6,40 @@ using AptManagement.Application.Common;
 using AptManagement.Domain.Entities;
 using AptManagement.Domain.Enums;
 using AptManagement.Domain.Interfaces;
+using Microsoft.EntityFrameworkCore;
 
 namespace AptManagement.Application.Services;
 
-public class BankStatementService(IRepository<Income> _incomeRepo, IRepository<Expense> _expenseRepo, IRepository<ApartmentDebt> _aptDebtRepo) : IBankStatementService
+public class BankStatementService(
+    IRepository<Income> _incomeRepo,
+    IRepository<Expense> _expenseRepo,
+    IRepository<ApartmentDebt> _aptDebtRepo,
+    IRepository<ExpenseCategory> _expenseCat,
+    IUnitOfWork _unitOfWork) : IBankStatementService
 {
     private readonly string _apartmentRegexPattern = @"(?i)(?:daire|no|d|kapı|konut)\s*[:.]?\s*(\d+)";
 
     // Gider Anahtar Kelimeleri
     private readonly Dictionary<string, string> _expenseKeywords = new()
     {
-        { "enerjisa", "Elektrik Faturası" },
-        { "ayesaş", "Elektrik Faturası" },
-        { "iski", "Su Faturası" },
-        { "igdaş", "Doğalgaz Faturası" },
-        { "asansör", "Asansör Bakım" },
-        { "temizlik", "Temizlik/Görevli" },
-        { "sigorta", "Bina Sigortası" },
-        { "noter", "Resmi Giderler" },
-        { "komisyon", "Banka Masrafı" },
-        { "para çekme", "Nakit Kasa Çıkışı" }
+        { "enerjisa", "Elektrik" },
+        { "ayesaş", "Elektrik" },
+        { "iski", "Su" },
+        { "igdaş", "Doğalgaz" },
+        { "asansör", "Asansör" },
+        { "temizlik", "Temizlik" },
+        { "bakım", "Bakım-Onarım" },
+        //{ "sigorta", "Bina Sigortası" },
+        //{ "noter", "Resmi Giderler" },
+        //{ "komisyon", "Banka Masrafı" },
+        //{ "para çekme", "Nakit Para Çıkışı" },
+        { "işlem komisyonu", "Komisyon Giderleri" },
+        { "bsmv", "Vergi Giderleri" },
+        { "havale komisyonu", "Komisyon Giderleri" },
+        { "atm para çekme", "Nakit Para Çıkışı" },
     };
 
-    public List<BankTransactionDto> ParseExcelFile(Stream fileStream)
+    public async Task<List<BankTransactionDto>> ParseExcelFile(Stream fileStream)
     {
         var transactions = new List<BankTransactionDto>();
         ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
@@ -62,6 +73,8 @@ public class BankStatementService(IRepository<Income> _incomeRepo, IRepository<E
 
             if (!headerFound) return transactions; // Başlık yoksa boş dön
 
+            var allCategories = await _expenseCat.GetAll().ToListAsync();
+
             // --- VERİ OKUMA DÖNGÜSÜ ---
             for (int row = startRow; row <= rowCount; row++)
             {
@@ -94,7 +107,7 @@ public class BankStatementService(IRepository<Income> _incomeRepo, IRepository<E
                 {
                     dto.TransactionType = "Gider";
                     dto.Amount = Math.Abs(amount); // Pozitif yap
-                    dto.SuggestedCategory = AnalyzeExpenseCategory(description);
+                    dto.SuggestedCategory = await AnalyzeExpenseCategory(description,allCategories);
                 }
                 else // Gelir
                 {
@@ -110,14 +123,24 @@ public class BankStatementService(IRepository<Income> _incomeRepo, IRepository<E
         return transactions;
     }
 
-    private string AnalyzeExpenseCategory(string description)
+    private async Task<string> AnalyzeExpenseCategory(string description,List<ExpenseCategory> expenseCategories)
     {
+        if (string.IsNullOrEmpty(description)) return "Genel Giderler";
+
         var descLower = description.ToLower(new System.Globalization.CultureInfo("tr-TR"));
+
         foreach (var keyword in _expenseKeywords)
         {
-            if (descLower.Contains(keyword.Key)) return keyword.Value;
+            if (descLower.Contains(keyword.Key.ToLower(new System.Globalization.CultureInfo("tr-TR"))))
+            {
+                return keyword.Value; // Sözlükteki karşılığı döndür (Örn: "Vergi Giderleri")
+            }
         }
-        return "Diğer Giderler";
+        var matchedCategory = expenseCategories.FirstOrDefault(c =>
+        !string.IsNullOrEmpty(c.Description) &&
+        descLower.Contains(c.Description.ToLower(new System.Globalization.CultureInfo("tr-TR"))));
+
+        return matchedCategory?.Name ?? "Diğer Giderler";
     }
 
     private int? ExtractApartmentId(string description)
@@ -186,48 +209,52 @@ public class BankStatementService(IRepository<Income> _incomeRepo, IRepository<E
     {
         try
         {
-            foreach (var item in transactions)
+            await _unitOfWork.ExecuteInTransactionAsync(async () =>
             {
-                // Zaten işlenmişse atla
-                if (item.IsProcessed) continue;
-
-                if (item.TransactionType == "Gelir")
+                foreach (var item in transactions)
                 {
-                    // GELİR KAYDI
-                    var income = new Income
-                    {
-                        Amount = item.Amount,
-                        Title = item.Description.Length > 100 ? item.Description.Substring(0, 100) : item.Description,
-                        IncomeDate = item.Date,
-                        PaymentCategory = PaymentCategory.BankTransfer, // Enum: Banka Havalesi
-                        IncomeCategoryId = 1, // Varsayılan: Aidat (Bunu dinamik yapabiliriz)
-                        ApartmentId = item.MatchedApartmentId ?? 0 // Eşleşen daire yoksa 0 (Belirsiz)
-                    };
+                    // Zaten işlenmişse atla
+                    if (item.IsProcessed) continue;
 
-                    await _incomeRepo.CreateAsync(income);
-
-                    // Eğer daire belliyse borçtan düşme
-                    if (income.ApartmentId > 0)
+                    if (item.TransactionType == "Gelir")
                     {
-                        await ApplyPaymentToDebtsAsync(income.ApartmentId, income.Amount);
+                        // GELİR KAYDI
+                        var income = new Income
+                        {
+                            Amount = item.Amount,
+                            Title = item.Description.Length > 100 ? item.Description.Substring(0, 100) : item.Description,
+                            IncomeDate = item.Date,
+                            PaymentCategory = PaymentCategory.BankTransfer, // Enum: Banka Havalesi
+                            IncomeCategoryId = 1, // Varsayılan: Aidat (Bunu dinamik yapabiliriz)
+                            ApartmentId = item.MatchedApartmentId ?? 0 // Eşleşen daire yoksa 0 (Belirsiz)
+                        };
+
+                        await _incomeRepo.CreateAsync(income);
+
+                        // Eğer daire belliyse borçtan düşme
+                        if (income.ApartmentId > 0)
+                        {
+                            await ApplyPaymentToDebtsAsync(income.ApartmentId, income.Amount);
+                        }
+                    }
+                    else
+                    {
+                        // GİDER KAYDI
+                        var expenseCategory = await _expenseCat.GetAll().FirstOrDefaultAsync(x => x.Name == item.SuggestedCategory);
+                        if (expenseCategory == null) expenseCategory = new ExpenseCategory { Id = 11, Name = "Diğer Giderler" };
+
+                        var expense = new Expense
+                        {
+                            Amount = item.Amount,
+                            Title = item.Description.Length > 100 ? item.Description.Substring(0, 100) : item.Description,
+                            ExpenseDate = item.Date,
+                            PaymentCategory = PaymentCategory.BankTransfer,
+                            ExpenseCategoryId = expenseCategory.Id
+                        };
+                        await _expenseRepo.CreateAsync(expense);
                     }
                 }
-                else
-                {
-                    // GİDER KAYDI
-                    // Not: Kategori adından ID bulma işlemi gerekebilir. 
-                    // Şimdilik varsayılan ID atıyoruz, sen burayı geliştirebilirsin.
-                    var expense = new Expense
-                    {
-                        Amount = item.Amount,
-                        Title = item.Description.Length > 100 ? item.Description.Substring(0, 100) : item.Description,
-                        ExpenseDate = item.Date,
-                        PaymentCategory = PaymentCategory.BankTransfer,
-                        ExpenseCategoryId = 1 // Varsayılan: Genel Gider (Bunu düzelteceğiz)
-                    };
-                    await _expenseRepo.CreateAsync(expense);
-                }
-            }
+            });
 
             return ServiceResult<bool>.Success(true);
         }

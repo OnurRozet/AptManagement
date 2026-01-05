@@ -1,4 +1,5 @@
-﻿using AptManagement.Application.Dtos.Reports;
+﻿using AptManagement.Application.Common;
+using AptManagement.Application.Dtos.Reports;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,8 +10,8 @@ namespace AptManagement.Application.Interfaces
 {
     public interface IReportService
     {
-        DashboardSummaryDto GetGeneralStatusCardsAsync();
-        Task<List<MonthlyTrendDto>> GetMonthlyTrendAsync();
-        List<ExpenseDistributionDto> GetExpenseDistributionAsync();
+        ServiceResult<DashboardSummaryDto> GetGeneralStatusCardsAsync();
+        Task<ServiceResult<List<MonthlyTrendDto>>> GetMonthlyTrendAsync();
+        ServiceResult<List<ExpenseDistributionDto>> GetExpenseDistributionAsync();
     }
 }

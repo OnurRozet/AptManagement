@@ -13,6 +13,7 @@ namespace AptManagement.Application.Common.Base.Response
         public decimal Amount { get; set; }
         public DateTime DueDate { get; set; }
         public string? Description { get; set; }
+        public decimal PaidAmount { get; set; }
         public bool IsClosed { get; set; }
     }
 }

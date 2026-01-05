@@ -18,7 +18,7 @@ using X.PagedList.Extensions;
 
 namespace AptManagement.Application.Services
 {
-    public class ApartmentService(IRepository<Apartment> repository, IMapper mapper, IValidator<Apartment> validator) : IApartmentService
+    public class ApartmentService(IUnitOfWork unitOfWork, IRepository<Apartment> repository, IMapper mapper, IValidator<Apartment> validator) : IApartmentService
     {
         public async Task<ServiceResult<CreateOrEditResponse>> CreateOrEdit(ApartmentDto apartment)
         {
@@ -34,23 +34,31 @@ namespace AptManagement.Application.Services
 
             if (newApartment == null) return ServiceResult<CreateOrEditResponse>.Error();
 
-            if (newApartment.Id > 0)
+            return await unitOfWork.ExecuteInTransactionAsync(async () =>
             {
-                repository.Update(newApartment);
-                return ServiceResult<CreateOrEditResponse>.Success(new CreateOrEditResponse { ID = newApartment.Id }, "Başarılı şekilde güncellenmiştir.");
-            }
 
-            await repository.CreateAsync(newApartment);
+                if (newApartment.Id > 0)
+                {
+                    repository.Update(newApartment);
+                    return ServiceResult<CreateOrEditResponse>.Success(new CreateOrEditResponse { ID = newApartment.Id }, "Başarılı şekilde güncellenmiştir.");
+                }
 
-            return ServiceResult<CreateOrEditResponse>.Success(new CreateOrEditResponse { ID = newApartment.Id }, "Başarılı şekilde oluşturulmuştur.");
+                await repository.CreateAsync(newApartment);
+
+                return ServiceResult<CreateOrEditResponse>.Success(new CreateOrEditResponse { ID = newApartment.Id }, "Başarılı şekilde oluşturulmuştur.");
+            });
         }
 
         public async Task<bool> DeleteApartmentAsync(int id)
         {
-            var apartment = await repository.GetByIdAsync(id);
-            if (apartment == null) return false;
-            repository.Delete(apartment);
-            return true;
+            return await unitOfWork.ExecuteInTransactionAsync(async () =>
+             {
+                 var apartment = await repository.GetByIdAsync(id);
+                 if (apartment == null) return false;
+                 repository.Delete(apartment);
+                 return true;
+
+             });
         }
 
         public async Task<ServiceResult<SearchResponse<ApartmentResponse>>> Search(ApartmentSearch request)
@@ -64,7 +72,7 @@ namespace AptManagement.Application.Services
                     Label = x.Label,
                     OwnerName = x.OwnerName,
                     TenantName = x.TenantName,
-                    Balance = x.Debts.Sum(x=>x.Amount),
+                    Balance = x.Balance
                 })
                 .OrderBy(x => x.Id)
                 .ToPagedList(request.Page, (int)request.PageSize);

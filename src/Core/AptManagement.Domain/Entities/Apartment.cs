@@ -13,6 +13,7 @@ namespace AptManagement.Domain.Entities
         public required string OwnerName { get; set; }
         public  string? TenantName { get; set; }
         public decimal Balance { get; set; } = 0;
+        public bool IsManager { get; set; } = false;
         public ICollection<Income> Incomes { get; set; } = [];
         public ICollection<ApartmentDebt> Debts { get; set; } = [];
         // Genelde bir dairede birden fazla kişi (AppUser) tanımlı olabilir (Eşler vb.)

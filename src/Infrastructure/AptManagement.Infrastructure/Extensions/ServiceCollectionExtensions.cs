@@ -6,6 +6,7 @@ using AptManagement.Domain.Entities;
 using AptManagement.Domain.Interfaces;
 using AptManagement.Infrastructure.Context;
 using AptManagement.Infrastructure.Repositories;
+using AptManagement.Infrastructure.UnitOfWork;
 using FluentValidation;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
@@ -72,6 +73,7 @@ namespace AptManagement.Infrastructure.Extensions
 
 
             services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
+            services.AddScoped<IUnitOfWork, UnitOfWork>();
             services.AddScoped<IApartmentService, ApartmentService>();
             services.AddScoped<IDuesSettingService, DuesSettingService>();
             services.AddScoped<IIncomeService, IncomeService>();

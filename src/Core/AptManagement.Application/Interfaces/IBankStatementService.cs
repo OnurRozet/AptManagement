@@ -10,7 +10,7 @@ namespace AptManagement.Application.Interfaces
 {
     public interface IBankStatementService
     {
-        List<BankTransactionDto> ParseExcelFile(Stream fileStream);
+        Task<List<BankTransactionDto>> ParseExcelFile(Stream fileStream);
         Task<ServiceResult<bool>> ProcessBankStatementAsync(List<BankTransactionDto> transactions);
     }
 }

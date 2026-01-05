@@ -13,7 +13,7 @@ using X.PagedList.Extensions;
 
 namespace AptManagement.Application.Services
 {
-    public class ExpenseService(IRepository<Expense> repository, IMapper mapper, IValidator<Expense> validator) : IExpenseService
+    public class ExpenseService(IUnitOfWork uow, IRepository<Expense> repository, IMapper mapper, IValidator<Expense> validator) : IExpenseService
     {
         public async Task<ServiceResult<CreateOrEditResponse>> CreateOrEdit(ExpenseDto request)
         {
@@ -29,22 +29,29 @@ namespace AptManagement.Application.Services
 
             if (expense == null) return ServiceResult<CreateOrEditResponse>.Error();
 
-            if (expense.Id > 0)
+            return await uow.ExecuteInTransactionAsync(async () =>
             {
-                repository.Update(expense);
-                return ServiceResult<CreateOrEditResponse>.Success(new CreateOrEditResponse { ID = expense.Id }, "Başarılı şekilde güncellenmiştir.");
-            }
-            await repository.CreateAsync(expense);
 
-            return ServiceResult<CreateOrEditResponse>.Success(new CreateOrEditResponse { ID = expense.Id }, "Başarılı şekilde oluşturulmuştur.");
+                if (expense.Id > 0)
+                {
+                    repository.Update(expense);
+                    return ServiceResult<CreateOrEditResponse>.Success(new CreateOrEditResponse { ID = expense.Id }, "Başarılı şekilde güncellenmiştir.");
+                }
+                await repository.CreateAsync(expense);
+
+                return ServiceResult<CreateOrEditResponse>.Success(new CreateOrEditResponse { ID = expense.Id }, "Başarılı şekilde oluşturulmuştur.");
+            });
         }
 
         public async Task<ServiceResult<bool>> DeleteExpenseAsync(int id)
         {
-            var expense = await repository.GetByIdAsync(id);
-            if (expense == null) return ServiceResult<bool>.Error("Gider Silinemedi");
-            repository.Delete(expense);
-            return ServiceResult<bool>.Success(result:true);
+            return await uow.ExecuteInTransactionAsync(async () =>
+            {
+                var expense = await repository.GetByIdAsync(id);
+                if (expense == null) return ServiceResult<bool>.Error("Gider Silinemedi");
+                repository.Delete(expense);
+                return ServiceResult<bool>.Success(result: true);
+            });
         }
 
         public async Task<ServiceResult<DetailResponse<ExpenseResponse>>> GetExpenseById(int id)
@@ -78,7 +85,8 @@ namespace AptManagement.Application.Services
                     ExpenseCategoryId = x.ExpenseCategoryId,
                     ExpenseCategory = x.ExpenseCategory.Name
                 })
-                .OrderBy(x => x.Id)
+                .OrderByDescending(x => x.ExpenseDate)
+                .ThenByDescending(x => x.Id)
                 .ToPagedList(request.Page, (int)request.PageSize);
 
             return ServiceResult<SearchResponse<ExpenseResponse>>.Success(new SearchResponse<ExpenseResponse>

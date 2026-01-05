@@ -12,7 +12,7 @@ using X.PagedList.Extensions;
 
 namespace AptManagement.Application.Services
 {
-    public class ApartmentDebtService(IRepository<ApartmentDebt> repository, IMapper mapper, IValidator<ApartmentDebt> validator) : IApartmentDebtService
+    public class ApartmentDebtService(IUnitOfWork unitOfWork ,IRepository<ApartmentDebt> repository, IMapper mapper, IValidator<ApartmentDebt> validator) : IApartmentDebtService
     {
         public async Task<ServiceResult<CreateOrEditResponse>> CreateOrEdit(ApartmentDebtDto request)
         {
@@ -28,23 +28,30 @@ namespace AptManagement.Application.Services
 
             if (apartmentDebt == null) return ServiceResult<CreateOrEditResponse>.Error();
 
-            if (apartmentDebt.Id > 0)
+            return await unitOfWork.ExecuteInTransactionAsync(async () =>
             {
-                repository.Update(apartmentDebt);
-                return ServiceResult<CreateOrEditResponse>.Success(new CreateOrEditResponse { ID = apartmentDebt.Id }, "Başarılı şekilde güncellenmiştir.");
 
-            }
-            await repository.CreateAsync(apartmentDebt);
+                if (apartmentDebt.Id > 0)
+                {
+                    repository.Update(apartmentDebt);
+                    return ServiceResult<CreateOrEditResponse>.Success(new CreateOrEditResponse { ID = apartmentDebt.Id }, "Başarılı şekilde güncellenmiştir.");
+                }
 
-            return ServiceResult<CreateOrEditResponse>.Success(new CreateOrEditResponse { ID = apartmentDebt.Id }, "Başarılı şekilde oluşturulmuştur.");
+                await repository.CreateAsync(apartmentDebt);
+
+                return ServiceResult<CreateOrEditResponse>.Success(new CreateOrEditResponse { ID = apartmentDebt.Id }, "Başarılı şekilde oluşturulmuştur.");
+            });
         }
 
         public async Task<bool> DeleteApartmentDebtAsync(int id)
         {
-            var apartmentDebt = await repository.GetByIdAsync(id);
-            if (apartmentDebt == null) return false;
-            repository.Delete(apartmentDebt);
-            return true;
+            return await unitOfWork.ExecuteInTransactionAsync(async () =>
+            {
+                var apartmentDebt = await repository.GetByIdAsync(id);
+                if (apartmentDebt == null) return false;
+                repository.Delete(apartmentDebt);
+                return true;
+            });
         }
 
         public async Task<ServiceResult<DetailResponse<ApartmentDebtResponse>>> GetApartmentDebtById(int id)
@@ -74,9 +81,10 @@ namespace AptManagement.Application.Services
                     Amount = x.Amount,
                     DueDate = x.DueDate,
                     Description = x.Description,
-                    IsClosed = x.IsClosed
+                    IsClosed = x.IsClosed,
+                    PaidAmount=x.PaidAmount
                 })
-                .OrderBy(x => x.Id)
+                .OrderByDescending(x => x.Id)
                 .ToPagedList(request.Page, (int)request.PageSize);
 
             return ServiceResult<SearchResponse<ApartmentDebtResponse>>.Success(new SearchResponse<ApartmentDebtResponse>
