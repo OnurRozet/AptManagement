@@ -1,9 +1,5 @@
 using AptManagement.Application.Interfaces;
 using AptManagement.Infrastructure.Context;
-using Microsoft.EntityFrameworkCore.Storage;
-using System;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace AptManagement.Infrastructure.UnitOfWork
 {

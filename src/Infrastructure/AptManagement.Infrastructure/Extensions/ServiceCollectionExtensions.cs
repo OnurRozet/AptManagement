@@ -70,10 +70,10 @@ namespace AptManagement.Infrastructure.Extensions
             .AddEntityFrameworkStores<AptManagementContext>() // Hangi Context'i kullanacak?
             .AddDefaultTokenProviders();
 
-
+            // Ensure the correct UnitOfWork class is used
+            services.AddScoped<IUnitOfWork, UnitOfWork.UnitOfWork>();
 
             services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
-            services.AddScoped<IUnitOfWork, UnitOfWork>();
             services.AddScoped<IApartmentService, ApartmentService>();
             services.AddScoped<IDuesSettingService, DuesSettingService>();
             services.AddScoped<IIncomeService, IncomeService>();
