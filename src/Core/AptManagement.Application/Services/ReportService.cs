@@ -3,6 +3,7 @@ using AptManagement.Application.Dtos.Reports;
 using AptManagement.Application.Interfaces;
 using AptManagement.Domain.Entities;
 using AptManagement.Domain.Interfaces;
+using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
 
 namespace AptManagement.Application.Services
@@ -40,7 +41,7 @@ namespace AptManagement.Application.Services
             var totalExpense = expenseRepo.GetAll().Sum(x => x.Amount);
 
             // 2. Alacak Sorguları (Kapanmamış borçlar)
-            var unpaidDebtsQuery = debtRepo.GetAll().Where(x => !x.IsClosed);
+            var unpaidDebtsQuery = debtRepo.GetAll().Where(x => !x.IsClosed && !x.Apartment.IsManager);
 
             var expectedIncome = unpaidDebtsQuery.Sum(x => x.Amount - x.PaidAmount); //Beklenen Gelir (Dairenin borcundan , yaptıgı ödemeleri düştük)
 

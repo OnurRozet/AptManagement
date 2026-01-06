@@ -11,6 +11,7 @@ namespace AptManagement.Application.Dtos
         public int ApartmentId { get; set; }
         public string ApartmentLabel { get; set; } = string.Empty;
         public string OwnerName { get; set; } = string.Empty;
+        public bool IsManager { get; set; } = false;
 
         // Her ay için ödenen toplam tutar
         public decimal Jan { get; set; }

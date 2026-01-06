@@ -48,7 +48,7 @@ namespace AptManagement.Application.Services
                                     debts.Add(new ApartmentDebt
                                     {
                                         ApartmentId = apt.Id,
-                                        Amount = due.Amount, // Daire tablosunda tanımlı varsayılan aidat
+                                        Amount = apt.IsManager ? 0 : due.Amount, // Daire tablosunda tanımlı varsayılan aidat
                                         DueDate = month == 2 ? new DateTime(currentYear, month, 28) : new DateTime(currentYear, month, 30),
                                         IsClosed = false,
                                         CreatedDate = DateTime.Now,

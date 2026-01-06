@@ -149,7 +149,8 @@ namespace AptManagement.Application.Services
 
             var totalItemCount = repository.GetAll().Count();
 
-            var highestRevenue = repository.GetAll().Where(x => x.IncomeDate.Year == date.Year)
+            var highestRevenue = repository.GetAll()
+                //.Where(x => x.IncomeDate.Year == date.Year)
                 .GroupBy(x => new { x.Apartment.Label, x.Apartment.OwnerName, x.Apartment.TenantName })
                 .Select(g => new TopPayerDto
                 {
@@ -162,7 +163,7 @@ namespace AptManagement.Application.Services
                 .FirstOrDefault();
 
             var regularPayers = repository.GetAll()
-                .Where(x => x.IncomeDate.Year == currentYear)
+                //.Where(x => x.IncomeDate.Year == currentYear)
                 .GroupBy(x => new { x.Apartment.Label, x.Apartment.OwnerName })
                 .Select(g => new TopPayerDto
                 {
@@ -198,7 +199,7 @@ namespace AptManagement.Application.Services
             ApartmentId = apt.Id,
             ApartmentLabel = apt.Label,
             OwnerName = apt.OwnerName,
-
+            IsManager = apt.IsManager,
             // Alt sorgular SQL tarafında 'Left Join' ve 'Sum' olarak çalışır
             Jan = apt.Debts.Where(x => x.DueDate.Year == year && x.DueDate.Month == 1).Sum(x => (decimal?)x.PaidAmount) ?? 0,
             Feb = apt.Debts.Where(x => x.DueDate.Year == year && x.DueDate.Month == 2).Sum(x => (decimal?)x.PaidAmount) ?? 0,

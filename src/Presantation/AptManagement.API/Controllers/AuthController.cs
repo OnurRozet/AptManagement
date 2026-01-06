@@ -10,7 +10,7 @@ public class AuthController(IAuthService authService) : ControllerBase
     public async Task<IActionResult> Register(RegisterDto request)
     {
         var result = await authService.RegisterAsync(request);
-        if (!result.IsSuccess) 
+        if (!result.IsSuccess)
         {
             return BadRequest(result.Message);
         }
@@ -21,11 +21,18 @@ public class AuthController(IAuthService authService) : ControllerBase
     public async Task<IActionResult> Login(LoginDto request)
     {
         var result = await authService.LoginAsync(request);
-        if (!result.IsSuccess)  
+        if (!result.IsSuccess)
         {
             return BadRequest(result.Message);
         }
-        // Şimdilik sadece mesaj dönüyoruz, ilerde buraya Token eklenecek.  
+        // Şimdilik sadece mesaj dönüyoruz, ilerde buraya Token eklenecek.    
         return Ok(result);
+    }
+
+    [HttpPost("logout")]
+    public async Task<IActionResult> Logout()
+    {
+        await authService.LogoutAsync();
+        return Ok(new { Message = "Logout successful" });
     }
 }

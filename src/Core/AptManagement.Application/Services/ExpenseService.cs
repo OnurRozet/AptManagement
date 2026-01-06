@@ -107,7 +107,8 @@ namespace AptManagement.Application.Services
 
             var totalItemCount = repository.GetAll().Count();
 
-            var highestRevenue = repository.GetAll().Where(x => x.ExpenseDate.Year == date.Year)
+            var highestRevenue = repository.GetAll()
+                //.Where(x => x.ExpenseDate.Year == date.Year)
                 .GroupBy(x => new { x.ExpenseCategory.Name })
                 .Select(g => new HighestFeeCategoryItem
                 {
