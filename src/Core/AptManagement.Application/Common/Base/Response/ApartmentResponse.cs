@@ -14,5 +14,6 @@ namespace AptManagement.Application.Common.Base.Response
         public required string OwnerName { get; set; }
         public string? TenantName { get; set; }
         public decimal Balance { get; set; } 
+        public decimal OpeningBalance { get; set; } 
     }
 }

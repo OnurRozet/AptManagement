@@ -4,6 +4,7 @@ using AptManagement.Infrastructure.Context;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace AptManagement.Infrastructure.Migrations
 {
     [DbContext(typeof(AptManagementContext))]
-    partial class AptManagementContextModelSnapshot : ModelSnapshot
+    [Migration("20260107124609_managementPeriod_added")]
+    partial class managementPeriod_added
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -55,9 +58,6 @@ namespace AptManagement.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<decimal>("OpeningBalance")
-                        .HasColumnType("decimal(18,2)");
-
                     b.Property<string>("OwnerName")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -87,7 +87,6 @@ namespace AptManagement.Infrastructure.Migrations
                             IsDeleted = false,
                             IsManager = false,
                             Label = "Dükkan",
-                            OpeningBalance = 0m,
                             OwnerName = "Fatma Uğur",
                             TenantName = "Kaan Ersöz (Getir Su Bayii)",
                             UpdatedBy = 0,
@@ -104,7 +103,6 @@ namespace AptManagement.Infrastructure.Migrations
                             IsDeleted = false,
                             IsManager = false,
                             Label = "Daire 2",
-                            OpeningBalance = 0m,
                             OwnerName = "Eray Şişman",
                             TenantName = "Begümsu Güller",
                             UpdatedBy = 0,
@@ -121,7 +119,6 @@ namespace AptManagement.Infrastructure.Migrations
                             IsDeleted = false,
                             IsManager = false,
                             Label = "Daire 3",
-                            OpeningBalance = 0m,
                             OwnerName = "İhsan Esen",
                             TenantName = "Serhat Vardar",
                             UpdatedBy = 0,
@@ -138,7 +135,6 @@ namespace AptManagement.Infrastructure.Migrations
                             IsDeleted = false,
                             IsManager = false,
                             Label = "Daire 4",
-                            OpeningBalance = 0m,
                             OwnerName = "Şaban Karadeniz",
                             TenantName = "Hasan Alcay",
                             UpdatedBy = 0,
@@ -155,7 +151,6 @@ namespace AptManagement.Infrastructure.Migrations
                             IsDeleted = false,
                             IsManager = false,
                             Label = "Daire 5",
-                            OpeningBalance = 0m,
                             OwnerName = "İlknur Oran",
                             TenantName = "",
                             UpdatedBy = 0,
@@ -172,7 +167,6 @@ namespace AptManagement.Infrastructure.Migrations
                             IsDeleted = false,
                             IsManager = false,
                             Label = "Daire 6",
-                            OpeningBalance = 0m,
                             OwnerName = "Şenol Baykal",
                             TenantName = "",
                             UpdatedBy = 0,
@@ -189,7 +183,6 @@ namespace AptManagement.Infrastructure.Migrations
                             IsDeleted = false,
                             IsManager = false,
                             Label = "Daire 7",
-                            OpeningBalance = 0m,
                             OwnerName = "Kadir Özer",
                             TenantName = "",
                             UpdatedBy = 0,
@@ -206,7 +199,6 @@ namespace AptManagement.Infrastructure.Migrations
                             IsDeleted = false,
                             IsManager = false,
                             Label = "Daire 8",
-                            OpeningBalance = 0m,
                             OwnerName = "Abdulkadir Cebecioğlu",
                             TenantName = "",
                             UpdatedBy = 0,
@@ -223,7 +215,6 @@ namespace AptManagement.Infrastructure.Migrations
                             IsDeleted = false,
                             IsManager = true,
                             Label = "Daire 9",
-                            OpeningBalance = 0m,
                             OwnerName = "Onur Rözet",
                             TenantName = "",
                             UpdatedBy = 0,
@@ -240,7 +231,6 @@ namespace AptManagement.Infrastructure.Migrations
                             IsDeleted = false,
                             IsManager = false,
                             Label = "Daire 10",
-                            OpeningBalance = 0m,
                             OwnerName = "Abdulkadir Cebecioğlu",
                             TenantName = "",
                             UpdatedBy = 0,
@@ -257,7 +247,6 @@ namespace AptManagement.Infrastructure.Migrations
                             IsDeleted = false,
                             IsManager = false,
                             Label = "Daire 11",
-                            OpeningBalance = 0m,
                             OwnerName = "Cem Bey",
                             TenantName = "Reyhan Özer",
                             UpdatedBy = 0,
@@ -274,7 +263,6 @@ namespace AptManagement.Infrastructure.Migrations
                             IsDeleted = false,
                             IsManager = false,
                             Label = "Daire 12",
-                            OpeningBalance = 0m,
                             OwnerName = "Erkan Şimşek",
                             TenantName = "Kiracı",
                             UpdatedBy = 0,
@@ -291,7 +279,6 @@ namespace AptManagement.Infrastructure.Migrations
                             IsDeleted = false,
                             IsManager = false,
                             Label = "Daire 13",
-                            OpeningBalance = 0m,
                             OwnerName = "Menekşe Yalçın",
                             TenantName = "Enes Şengül",
                             UpdatedBy = 0,
@@ -308,7 +295,6 @@ namespace AptManagement.Infrastructure.Migrations
                             IsDeleted = false,
                             IsManager = false,
                             Label = "Daire 14",
-                            OpeningBalance = 0m,
                             OwnerName = "Emine Erten",
                             TenantName = "",
                             UpdatedBy = 0,
@@ -335,9 +321,6 @@ namespace AptManagement.Infrastructure.Migrations
 
                     b.Property<DateTime>("CreatedDate")
                         .HasColumnType("datetime2");
-
-                    b.Property<int>("DebtType")
-                        .HasColumnType("int");
 
                     b.Property<int>("DeletedBy")
                         .HasColumnType("int");

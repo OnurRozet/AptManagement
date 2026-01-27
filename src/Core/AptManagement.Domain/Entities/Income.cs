@@ -18,7 +18,7 @@ namespace AptManagement.Domain.Entities
         public IncomeCategory IncomeCategory { get; set; } = null!;
         public int ApartmentId { get; set; }
         public Apartment Apartment { get; set; } = null!;
-        public int? ApartmentDebtId { get; set; }
-        public ApartmentDebt? ApartmentDebt { get; set; }
+        public ICollection<IncomeDebtAllocation> Allocations { get; set; } = [];
+
     }
 }

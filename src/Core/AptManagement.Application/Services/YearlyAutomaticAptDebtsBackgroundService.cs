@@ -22,8 +22,10 @@ namespace AptManagement.Application.Services
                         var apartmentRepo = scope.ServiceProvider.GetRequiredService<IRepository<Apartment>>();
                         var debtRepo = scope.ServiceProvider.GetRequiredService<IRepository<ApartmentDebt>>();
                         var dueSettings = scope.ServiceProvider.GetRequiredService<IRepository<DuesSetting>>();
+                        var managementPeriod = scope.ServiceProvider.GetRequiredService<IRepository<ManagementPeriod>>();
 
                         int currentYear = DateTime.Now.Year;
+                       //int currentYear = 2025;
 
                         // 1. Tüm daireleri çek
                         var apartments = await apartmentRepo.GetAll().ToListAsync();
@@ -32,28 +34,52 @@ namespace AptManagement.Application.Services
                         {
                             // 2. Bu daire için bu yıla ait borçlar zaten oluşturulmuş mu?
                             bool isAlreadyCreated = await debtRepo.GetAll()
-                               .AnyAsync(x => x.ApartmentId == apt.Id && x.CreatedDate.Year == currentYear);
+                               .AnyAsync(x => x.ApartmentId == apt.Id && x.DueDate.Year == currentYear && x.DebtType == Domain.Enums.DebtType.Dues);
 
                             //3. Sistem özelinde tanımlanmış olan aidat tutarını çek.
                             var due = await dueSettings.GetAll().Where(x => x.StartDate.Year == currentYear).FirstOrDefaultAsync();
 
                             if (due == null) continue;
 
+
                             if (!isAlreadyCreated)
                             {
                                 // 3. 12 aylık borç kaydı oluştur
                                 var debts = new List<ApartmentDebt>();
+                                var managerApt = await managementPeriod.GetAll().Where(x => x.ApartmentId == apt.Id).FirstOrDefaultAsync();
                                 for (int month = 1; month <= 12; month++)
                                 {
-                                    debts.Add(new ApartmentDebt
+                                    var dueDate = month == 2 ? new DateTime(currentYear, month, 28) : new DateTime(currentYear, month, 30);
+                                    
+                                    // Yönetici muafiyeti kontrolü: StartDate ve EndDate arasındaki aylar için muafiyet uygula
+                                    bool isExempt = managerApt != null && 
+                                                   dueDate >= managerApt.StartDate && 
+                                                   dueDate <= managerApt.EndDate;
+                                    
+                                    if (isExempt)
                                     {
-                                        ApartmentId = apt.Id,
-                                        Amount = apt.IsManager ? 0 : due.Amount, // Daire tablosunda tanımlı varsayılan aidat
-                                        DueDate = month == 2 ? new DateTime(currentYear, month, 28) : new DateTime(currentYear, month, 30),
-                                        IsClosed = false,
-                                        CreatedDate = DateTime.Now,
-                                        Description = $"{month}. ay aidat borcu"
-                                    });
+                                        debts.Add(new ApartmentDebt
+                                        {
+                                            ApartmentId = apt.Id,
+                                            Amount = 0,
+                                            DueDate = dueDate,
+                                            IsClosed = false,
+                                            CreatedDate = DateTime.Now,
+                                            Description = "Yönetici Muafiyeti"
+                                        });
+                                    }
+                                    else
+                                    {
+                                        debts.Add(new ApartmentDebt
+                                        {
+                                            ApartmentId = apt.Id,
+                                            Amount = due.Amount,
+                                            DueDate = dueDate,
+                                            IsClosed = false,
+                                            CreatedDate = DateTime.Now,
+                                            Description = $"{month}. ay aidat borcu"
+                                        });
+                                    }
                                 }
 
                                 logger.LogInformation("Aidat borçları toplandı");

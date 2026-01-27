@@ -15,6 +15,9 @@ namespace AptManagement.Application.Common
         public static ServiceResult<T> Success(T result) => new() {ResultObject = result, IsSuccess = true ,Message=string.Empty};
         public static ServiceResult<T> Success(T result, string message) => new() {ResultObject = result, IsSuccess = true ,Message=message};
 
+        public static ServiceResult<T> Success(string message) => new() { IsSuccess = true, Message = message };
+
+
         public static ServiceResult<T> Error() => new() { IsSuccess = false, Message = string.Empty };
         public static ServiceResult<T> Error(string message) => new() {IsSuccess = false, Message = message };
         public static ServiceResult<T> Error(T result, string message) => new() { ResultObject = result, IsSuccess = false, Message = message };

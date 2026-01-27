@@ -85,6 +85,8 @@ namespace AptManagement.Infrastructure.Extensions
             services.AddScoped<IAuthService, AuthService>();
             services.AddScoped<ITokenService, TokenService>();
             services.AddScoped<IBankStatementService, BankStatementService>();
+            services.AddScoped<IIncomeDebtAllocationService, IncomeDebtAllocationService>();
+            services.AddScoped<IManagementPeriodService, ManagementPeriodService>();
             services.AddHostedService<YearlyAutomaticAptDebtsBackgroundService>();
 
             return services;

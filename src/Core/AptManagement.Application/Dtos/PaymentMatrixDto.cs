@@ -12,6 +12,7 @@ namespace AptManagement.Application.Dtos
         public string ApartmentLabel { get; set; } = string.Empty;
         public string OwnerName { get; set; } = string.Empty;
         public bool IsManager { get; set; } = false;
+        public decimal Amount { get; set; }
 
         // Her ay için ödenen toplam tutar
         public decimal Jan { get; set; }
@@ -28,5 +29,7 @@ namespace AptManagement.Application.Dtos
         public decimal Dec { get; set; }
 
         public decimal TotalYearlyPaid => Jan + Feb + Mar + Apr + May + Jun + Jul + Aug + Sep + Oct + Nov + Dec;
+        public decimal TotalYearlyDebt { get; set; }
+        public decimal TransferredDebt { get; set; }  // Geçmişten gelen toplam borç
     }
 }

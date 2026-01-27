@@ -3,6 +3,7 @@ using AptManagement.Application.Dtos;
 using AptManagement.Application.Interfaces;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using System.IO;
 
 namespace AptManagement.API.Controllers
 {
@@ -40,6 +41,24 @@ namespace AptManagement.API.Controllers
             var entity = await apartmentService.DeleteApartmentAsync(id);
             if (!entity) return NotFound();
             return Ok(entity);
+        }
+
+        [HttpPost("excel-create")]
+        public async Task<IActionResult> CreateApartmentWithExcel(IFormFile file)
+        {
+            if (file == null || file.Length == 0)
+                return BadRequest("Lütfen geçerli bir Excel dosyası yükleyin.");
+
+            // Uzantı kontrolü
+            var ext = Path.GetExtension(file.FileName).ToLower();
+            if (ext != ".xlsx" && ext != ".xls")
+                return BadRequest("Lütfen .xlsx veya .xls formatında (Excel) dosyası yükleyiniz.");
+
+            var fileContents = await apartmentService.ParseApartmentExcelAsync(file);
+            if (fileContents == null || !fileContents.IsSuccess) 
+                return BadRequest(fileContents?.Message ?? "Dosya işlenirken bir hata oluştu.");
+            
+            return Ok(fileContents);
         }
     }
 }

@@ -23,6 +23,8 @@ namespace AptManagement.Infrastructure.Context
         public DbSet<ExpenseCategory> ExpenseCategories { get; set; }
         public DbSet<Income> Incomes { get; set; }
         public DbSet<IncomeCategory> IncomeCategories { get; set; }
+        public DbSet<ManagementPeriod> ManagementPeriods { get; set; }
+        public DbSet<IncomeDebtAllocation> IncomeDebtAllocations { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

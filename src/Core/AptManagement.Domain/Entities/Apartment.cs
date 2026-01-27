@@ -12,7 +12,8 @@ namespace AptManagement.Domain.Entities
         public required string Label { get; set; }
         public required string OwnerName { get; set; }
         public  string? TenantName { get; set; }
-        public decimal Balance { get; set; } = 0;
+        public decimal Balance { get; set; } = 0; // Alacak Bakiyesi
+        public decimal OpeningBalance { get; set; } = 0; // Açık borç bakiyesi
         public bool IsManager { get; set; } = false;
         public ICollection<Income> Incomes { get; set; } = [];
         public ICollection<ApartmentDebt> Debts { get; set; } = [];

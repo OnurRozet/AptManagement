@@ -1,4 +1,5 @@
 ﻿using AptManagement.Domain.Common;
+using AptManagement.Domain.Enums;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -16,6 +17,10 @@ namespace AptManagement.Domain.Entities
         public string? Description { get; set; }
         public decimal PaidAmount { get; set; }
         public bool IsClosed { get; set; } //ödenip ödenmediğini kontrol edebiliriz
+        public DebtType DebtType { get; set; } = DebtType.Dues;
+
+        // Bir borç, birden fazla parçalı ödeme ile kapatılabilir
+        public ICollection<IncomeDebtAllocation> Allocations { get; set; } = [];
     }
 }
     

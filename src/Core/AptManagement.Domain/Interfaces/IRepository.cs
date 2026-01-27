@@ -11,6 +11,7 @@ namespace AptManagement.Domain.Interfaces
     public interface IRepository<T> where T : BaseEntity
     {
         Task CreateAsync(T entity);
+        Task BulkCreateAsync(List<T> entity);
         void Delete(T entity);
         void Update(T entity);
 

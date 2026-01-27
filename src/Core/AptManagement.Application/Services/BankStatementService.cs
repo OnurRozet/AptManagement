@@ -15,6 +15,8 @@ public class BankStatementService(
     IRepository<Expense> _expenseRepo,
     IRepository<ApartmentDebt> _aptDebtRepo,
     IRepository<ExpenseCategory> _expenseCat,
+    IRepository<Apartment> _apartmentRepo,
+    IRepository<IncomeDebtAllocation> _allocationRepo,
     IUnitOfWork _unitOfWork) : IBankStatementService
 {
     private readonly string _apartmentRegexPattern = @"(?i)(?:daire|no|d|kapı|konut)\s*[:.]?\s*(\d+)";
@@ -156,53 +158,68 @@ public class BankStatementService(
         return null;
     }
 
-    private Task ApplyPaymentToDebtsAsync(int apartmentId, decimal paymentAmount)
+    private async Task ApplyPaymentToDebtsAsync(int incomeId, int apartmentId, decimal paymentAmount)
     {
-        // O dairenin açık (kapatılmamış) borçlarını bul, en eskiden yeniye sırala
-        var openDebts = _aptDebtRepo.GetAll()
+        // 1. O dairenin açık borçlarını en eskiden yeniye çek
+        var openDebts = await _aptDebtRepo.GetAll()
             .Where(d => d.ApartmentId == apartmentId && !d.IsClosed)
             .OrderBy(d => d.DueDate)
             .ThenBy(d => d.Id)
-            .ToList();
+            .ToListAsync();
 
         if (!openDebts.Any())
-            return Task.CompletedTask;
+        {
+            // Eğer hiç borç yoksa, parayı daire bakiyesine ekleyebilirsin
+            var apartment = await _apartmentRepo.GetByIdAsync(apartmentId);
+            apartment.Balance += paymentAmount;
+            _apartmentRepo.Update(apartment);
+            return;
+        }
+
         decimal remainingPayment = paymentAmount;
 
         foreach (var debt in openDebts)
         {
-            if (remainingPayment <= 0) break; // Ödeme tamamlandı
+            if (remainingPayment <= 0) break;
 
-            // Kalan borç tutarını hesapla
             decimal remainingDebt = debt.Amount - debt.PaidAmount;
 
-            if (remainingDebt <= 0)
+            // Bu borç için ne kadar para ayıracağız? (Paranın yettiği kadar veya borcun tamamı kadar)
+            decimal amountToAllocate = Math.Min(remainingPayment, remainingDebt);
+
+            if (amountToAllocate > 0)
             {
-                // Bu borç zaten tamamen ödenmiş, kapat
-                debt.IsClosed = true;
-                debt.PaidAmount = debt.Amount;
+                // A) Borç Kaydını Güncelle
+                debt.PaidAmount += amountToAllocate;
+                if (debt.PaidAmount >= debt.Amount)
+                {
+                    debt.IsClosed = true;
+                    debt.PaidAmount = debt.Amount; // Kuruşu kuruşuna eşitle
+                }
                 _aptDebtRepo.Update(debt);
-                continue;
-            }
 
-            // Ödeme tutarı kalan borçtan fazla veya eşitse, borcu tamamen kapat
-            if (remainingPayment >= remainingDebt)
-            {
-                debt.PaidAmount = debt.Amount;
-                debt.IsClosed = true;
-                remainingPayment -= remainingDebt;
-            }
-            else
-            {
-                // Kısmi ödeme: Ödeme tutarı kalan borçtan azsa, sadece ödenen tutarı artır
-                debt.PaidAmount += remainingPayment;
-                remainingPayment = 0;
-            }
+                // B) KRİTİK: Tahsisat Kaydını At (İz Bırak!)
+                var allocation = new IncomeDebtAllocation
+                {
+                    IncomeId = incomeId,
+                    ApartmentDebtId = debt.Id,
+                    AllocatedAmount = amountToAllocate
+                };
+                // Allocation repo'yu inject etmiş olmalısın
+                await _allocationRepo.CreateAsync(allocation);
 
-            _aptDebtRepo.Update(debt);
+                // C) Kalan paradan düş
+                remainingPayment -= amountToAllocate;
+            }
         }
 
-        return Task.CompletedTask;
+        // Eğer tüm borçlar bitti ama hala para arttıysa, artanı cüzdana (bakiyeye) koy
+        if (remainingPayment > 0)
+        {
+            var apartment = await _apartmentRepo.GetByIdAsync(apartmentId);
+            apartment.Balance += remainingPayment;
+            _apartmentRepo.Update(apartment);
+        }
     }
 
     public async Task<ServiceResult<bool>> ProcessBankStatementAsync(List<BankTransactionDto> transactions)
@@ -234,7 +251,7 @@ public class BankStatementService(
                         // Eğer daire belliyse borçtan düşme
                         if (income.ApartmentId > 0)
                         {
-                            await ApplyPaymentToDebtsAsync(income.ApartmentId, income.Amount);
+                            await ApplyPaymentToDebtsAsync(income.Id, income.ApartmentId, income.Amount);
                         }
                     }
                     else

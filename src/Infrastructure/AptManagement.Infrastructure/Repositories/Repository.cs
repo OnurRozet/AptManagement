@@ -20,6 +20,18 @@ namespace AptManagement.Infrastructure.Repositories
             db = repository;
         }
 
+        public async Task BulkCreateAsync(List<T> entity)
+        {
+            foreach (var item in entity)
+            {
+                item.CreatedDate = TimeZoneInfo.ConvertTime(DateTime.UtcNow,
+                    TimeZoneInfo.FindSystemTimeZoneById("Europe/Istanbul"));
+            }
+
+            await db.AddRangeAsync(entity);
+            await db.SaveChangesAsync();
+        }
+
         public async Task CreateAsync(T entity)
         {   
             entity.CreatedDate = DateTime.Now;

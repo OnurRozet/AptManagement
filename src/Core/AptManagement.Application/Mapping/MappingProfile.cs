@@ -27,6 +27,10 @@ namespace AptManagement.Application.Mapping
             CreateMap<ExpenseCategory, ExpenseCategoryResponse>().ReverseMap();
             CreateMap<ApartmentDebt, ApartmentDebtDto>().ReverseMap();
             CreateMap<ApartmentDebt, ApartmentDebtResponse>().ReverseMap();
+            CreateMap<IncomeDebtAllocation, IncomeDebtAllocationDto>().ReverseMap();
+            CreateMap<IncomeDebtAllocation, IncomeDebtAllocationResponse>().ReverseMap();
+            CreateMap<ManagementPeriod, ManagementPeriodDto>().ReverseMap();
+            CreateMap<ManagementPeriod, ManagementPeriodResponse>().ReverseMap();
         }
     }
 }
