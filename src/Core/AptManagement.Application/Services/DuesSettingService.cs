@@ -33,6 +33,8 @@ namespace AptManagement.Application.Services
             }
 
             if (duesSetting == null) return ServiceResult<CreateOrEditResponse>.Error();
+            
+            var existingDues = await repository.GetAll().Where(x=>x.IsActive).AsNoTracking().ToListAsync();
 
             return await unitOfWork.ExecuteInTransactionAsync(async () =>
             {
@@ -43,6 +45,16 @@ namespace AptManagement.Application.Services
                     return ServiceResult<CreateOrEditResponse>.Success(new CreateOrEditResponse { ID = duesSetting.Id }, "Başarılı şekilde güncellenmiştir.");
                 }
 
+                // Ekleme yapmadan önce eski aidatları pasife çek
+                if (existingDues != null)
+                {
+                    existingDues.ForEach(x =>
+                    {
+                        x.IsActive = false;
+                         repository.Update(x);
+                    });
+                }
+                
                 await repository.CreateAsync(duesSetting);
                 await ApartmentDebtsUpdate(duesSetting);
 

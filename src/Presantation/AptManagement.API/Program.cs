@@ -34,7 +34,11 @@ if (app.Environment.IsDevelopment())
 
 app.UseCors("AllowPolicy");
 
-app.UseHttpsRedirection();
+// HTTPS redirection sadece Production ortamında aktif olsun
+if (!app.Environment.IsDevelopment())
+{
+    app.UseHttpsRedirection();
+}
 
 app.UseAuthentication();
 

@@ -35,4 +35,15 @@ public class AuthController(IAuthService authService) : ControllerBase
         await authService.LogoutAsync();
         return Ok(new { Message = "Logout successful" });
     }
+
+    [HttpGet("get-user-info/{apartmentNumber}")]
+    public async Task<IActionResult> GetUserInfo(string apartmentNumber)
+    {
+        var result = await authService.GetUserInfoAsync(apartmentNumber);
+        if (!result.IsSuccess)
+        {
+            return BadRequest(result.Message);
+        }
+        return Ok(result);
+    }
 }

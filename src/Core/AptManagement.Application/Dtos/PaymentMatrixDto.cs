@@ -28,8 +28,11 @@ namespace AptManagement.Application.Dtos
         public decimal Nov { get; set; }
         public decimal Dec { get; set; }
 
-        public decimal TotalYearlyPaid => Jan + Feb + Mar + Apr + May + Jun + Jul + Aug + Sep + Oct + Nov + Dec;
-        public decimal TotalYearlyDebt { get; set; }
+        //public decimal TotalYearlyPaid => Jan + Feb + Mar + Apr + May + Jun + Jul + Aug + Sep + Oct + Nov + Dec;
+        public decimal TotalPaid { get; set; } // Yıllık toplam ödeme
+        public decimal TotalYearlyDebt { get; set; } // Yıllık oplam aidat borcu
+        public decimal TotalDebtUntilNow { get; set; } // Bulunulan aya kadar ki toplam borç
         public decimal TransferredDebt { get; set; }  // Geçmişten gelen toplam borç
+        public decimal CurrentBalance => TotalDebtUntilNow - TotalPaid;
     }
 }

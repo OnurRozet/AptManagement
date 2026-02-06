@@ -58,6 +58,15 @@ namespace AptManagement.API.Controllers
             var data = await incomeService.GetYearlyPaymentMatrixAsync(year);
             return Ok(ServiceResult<List<PaymentMatrixDto>>.Success(data));
         }
+
+        [HttpGet("payment-matrix/{year}/export")]
+        public async Task<IActionResult> ExportPaymentMatrixToExcel(int year)
+        {
+            var fileBytes = await incomeService.ExportPaymentMatrixToExcelAsync(year);
+            var fileName = $"Aidat_Takibi_{year}.xlsx";
+
+            return File(fileBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
+        }
     }
 }
 

@@ -15,6 +15,21 @@ namespace AptManagement.Application.Services
 {
     public class AuthService(UserManager<AppUser> userManager, SignInManager<AppUser> signInManager, ITokenService tokenService) : IAuthService
     {
+        public async Task<ServiceResult<UserResponse>> GetUserInfoAsync(string apartmentNumber)
+        {
+            var user = await userManager.FindByNameAsync(apartmentNumber);
+
+            if (user == null) return ServiceResult<UserResponse>.Error("Kullanıcı bulunamadı");
+
+            return ServiceResult<UserResponse>.Success(new UserResponse
+            {
+                FullName = user.FullName,
+                IsManager = user.IsManager,
+                ApartmentNumber = user.ApartmentNumber,
+                Email = user.Email ?? string.Empty
+            });
+        }
+
         public async Task<ServiceResult<TokenResponse>> LoginAsync(LoginDto dto)
         {
 

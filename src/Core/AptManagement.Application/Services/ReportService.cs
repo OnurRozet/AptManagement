@@ -8,7 +8,10 @@ using System.Collections.Generic;
 
 namespace AptManagement.Application.Services
 {
-    public class ReportService(IRepository<Income> incomeRepo, IRepository<Expense> expenseRepo, IRepository<ApartmentDebt> debtRepo) : IReportService
+    public class ReportService(
+        IRepository<Income> incomeRepo,
+        IRepository<Expense> expenseRepo,
+        IRepository<ApartmentDebt> debtRepo) : IReportService
     {
         public ServiceResult<List<ExpenseDistributionDto>> GetExpenseDistributionAsync()
         {
@@ -35,19 +38,29 @@ namespace AptManagement.Application.Services
 
         public ServiceResult<DashboardSummaryDto> GetGeneralStatusCardsAsync()
         {
-            var now = DateTime.Now;            
+            var now = DateTime.Now;
+            var endOfCurrentMonth = new DateTime(now.Year, now.Month, 1).AddMonths(1).AddDays(-1);
 
             var totalIncome = incomeRepo.GetAll().Sum(x => x.Amount);
             var totalExpense = expenseRepo.GetAll().Sum(x => x.Amount);
 
             // 2. Alacak Sorguları (Kapanmamış borçlar)
-            var unpaidDebtsQuery = debtRepo.GetAll().Where(x => !x.IsClosed && !x.Apartment.IsManager);
+            var unpaidDebtsForExpectedIncome = debtRepo.GetAll()
+                .Where(x =>
+                    !x.IsClosed
+                    && !x.Apartment.IsManager);
 
-            var expectedIncome = unpaidDebtsQuery.Sum(x => x.Amount - x.PaidAmount); //Beklenen Gelir (Dairenin borcundan , yaptıgı ödemeleri düştük)
+            var unpaidDebtsQuery = debtRepo.GetAll()
+                .Where(x => x.DueDate.Date <= endOfCurrentMonth.Date // Tarihi bu aydan önce veya eşit olanlar
+                            && !x.IsClosed
+                            && !x.Apartment.IsManager);
 
-            var overdueAmount = unpaidDebtsQuery.Where(x => x.DueDate < now).Sum(x => x.Amount - x.PaidAmount); // vadesi geçmiş alacaklar
+            var expectedIncome =
+                unpaidDebtsForExpectedIncome.Sum(x =>
+                    x.Amount - x.PaidAmount); //Beklenen Gelir (Dairenin borcundan , yaptıgı ödemeleri düştük)
 
-            var activeDebtorsCount = unpaidDebtsQuery.Select(x => x.ApartmentId).Distinct().Count();  // Borçlu daire sayısı
+            var activeDebtorsCount =
+                unpaidDebtsQuery.Select(x => x.ApartmentId).Distinct().Count(); // Borçlu daire sayısı
 
             var summaryDto = new DashboardSummaryDto
             {
@@ -97,8 +110,12 @@ namespace AptManagement.Application.Services
                 var currentMonthDate = startDate.AddMonths(i);
                 var monthName = currentMonthDate.ToString("MMMM yyyy"); // Örn: "Aralık 2025"
 
-                var monthIncome = incomes.FirstOrDefault(x => x.Year == currentMonthDate.Year && x.Month == currentMonthDate.Month)?.Total ?? 0;
-                var monthExpense = expenses.FirstOrDefault(x => x.Year == currentMonthDate.Year && x.Month == currentMonthDate.Month)?.Total ?? 0;
+                var monthIncome =
+                    incomes.FirstOrDefault(x => x.Year == currentMonthDate.Year && x.Month == currentMonthDate.Month)
+                        ?.Total ?? 0;
+                var monthExpense =
+                    expenses.FirstOrDefault(x => x.Year == currentMonthDate.Year && x.Month == currentMonthDate.Month)
+                        ?.Total ?? 0;
 
                 result.Add(new MonthlyTrendDto
                 {
@@ -109,7 +126,6 @@ namespace AptManagement.Application.Services
             }
 
             return ServiceResult<List<MonthlyTrendDto>>.Success(result);
-
         }
     }
 }

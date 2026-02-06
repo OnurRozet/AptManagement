@@ -19,6 +19,7 @@ namespace AptManagement.Application.Interfaces
         Task<ServiceResult<bool>> DeleteIncomeAsync(int id);
         ServiceResult<IncomeSummaryDto> GetSummaryIncomeReport();
         Task<List<PaymentMatrixDto>> GetYearlyPaymentMatrixAsync(int year);
+        Task<byte[]> ExportPaymentMatrixToExcelAsync(int year);
     }
 }
 

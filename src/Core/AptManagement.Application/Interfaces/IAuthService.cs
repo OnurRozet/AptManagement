@@ -14,5 +14,6 @@ namespace AptManagement.Application.Interfaces
         Task<ServiceResult<bool>> RegisterAsync(RegisterDto dto);
         Task<ServiceResult<TokenResponse>> LoginAsync(LoginDto dto);
         Task LogoutAsync();
+        Task<ServiceResult<UserResponse>> GetUserInfoAsync(string apartmentNumber);
     }
 }
