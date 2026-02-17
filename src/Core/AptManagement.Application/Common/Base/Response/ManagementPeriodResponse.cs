@@ -11,8 +11,9 @@ namespace AptManagement.Application.Common.Base.Response
         public int Id { get; set; }
         public int ApartmentId { get; set; }
         public DateTime StartDate { get; set; }
-        public DateTime EndDate { get; set; }
+        public DateTime? EndDate { get; set; }
         public bool IsExemptFromDues { get; set; }
+        public bool IsActive { get; set; }
         public string? ApartmentLabel { get; set; }
         public string? ApartmentOwnerName { get; set; }
     }

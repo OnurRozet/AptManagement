@@ -11,6 +11,7 @@ namespace AptManagement.Application.Common.Base.Request
         public DateTime? StartDate { get; set; }
         public DateTime? EndDate { get; set; }
         public bool? IsExemptFromDues { get; set; }
+        public bool? IsActive { get; set; }
         public string? Keyword { get; set; }
     }
 }

@@ -11,8 +11,9 @@ namespace AptManagement.Application.Dtos
         public int Id { get; set; }
         public int ApartmentId { get; set; }
         public DateTime StartDate { get; set; }
-        public DateTime EndDate { get; set; }
+        public DateTime? EndDate { get; set; } // Null ise yıl sonuna kadar muaf
         public bool IsExemptFromDues { get; set; }
+        public bool IsActive { get; set; } = true;
     }
 }
 

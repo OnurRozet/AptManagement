@@ -1,4 +1,4 @@
-﻿using AptManagement.Application.Common;
+using AptManagement.Application.Common;
 using AptManagement.Application.Common.Base;
 using AptManagement.Application.Common.Base.Request;
 using AptManagement.Application.Common.Base.Response;
@@ -138,9 +138,27 @@ namespace AptManagement.Application.Services
         {
             return await unitOfWork.ExecuteInTransactionAsync(async () =>
             {
-                var apartments = mapper.Map<List<Apartment>>(request);
+                if (request.Count == 0)
+                    return ServiceResult<CreateOrEditResponse>.Success(new CreateOrEditResponse(), "İşlenecek daire bulunamadı.");
 
-                // 1. Önce Dairelerin Balance değerini ayarla (Borçları sonra tabloya atacağız)
+                // Veritabanında zaten var olan Label'ları al (Excel'deki Label'larla eşleşenler)
+                var labelsFromRequest = request.Select(r => r.Label.Trim()).Distinct().ToList();
+                var existingLabels = await repository.GetAll()
+                    .Where(a => labelsFromRequest.Contains(a.Label))
+                    .Select(a => a.Label)
+                    .ToListAsync();
+
+                // Mevcut daireleri atla, sadece yeni olanları ekle
+                var newDtos = request.Where(r => !existingLabels.Contains(r.Label.Trim())).ToList();
+                var skippedCount = request.Count - newDtos.Count;
+
+                if (newDtos.Count == 0)
+                    return ServiceResult<CreateOrEditResponse>.Success(new CreateOrEditResponse(), 
+                        $"Tüm daireler zaten sistemde kayıtlı. {skippedCount} daire atlandı.");
+
+                var apartments = mapper.Map<List<Apartment>>(newDtos);
+
+                // 1. Dairelerin Balance değerini ayarla (Borçları sonra tabloya atacağız)
                 foreach (var apt in apartments)
                 {
                     // Eğer OpeningBalance pozitifse (+), bu bir alacaktır (fazla para).
@@ -162,7 +180,7 @@ namespace AptManagement.Application.Services
                     {
                         initialDebts.Add(new ApartmentDebt
                         {
-                            ApartmentId = apt.Id, // Buranın 0 olmadığından emin ol!
+                            ApartmentId = apt.Id,
                             Amount = Math.Abs(apt.OpeningBalance),
                             DebtType = DebtType.TransferFromPast,
                             DueDate = new DateTime(DateTime.Now.Year, 1, 1),
@@ -179,7 +197,11 @@ namespace AptManagement.Application.Services
                     await debtRepo.BulkCreateAsync(initialDebts);
                 }
 
-                return ServiceResult<CreateOrEditResponse>.Success(new CreateOrEditResponse(), $"{apartments.Count} daire ve borç kayıtları başarıyla sisteme entegre edildi.");
+                var message = $"{apartments.Count} daire başarıyla eklendi.";
+                if (skippedCount > 0)
+                    message += $" ({skippedCount} daire zaten kayıtlı olduğu için atlandı)";
+
+                return ServiceResult<CreateOrEditResponse>.Success(new CreateOrEditResponse(), message);
             });
         }
 

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -34,5 +34,11 @@ namespace AptManagement.Application.Dtos
         public decimal TotalDebtUntilNow { get; set; } // Bulunulan aya kadar ki toplam borç
         public decimal TransferredDebt { get; set; }  // Geçmişten gelen toplam borç
         public decimal CurrentBalance => TotalDebtUntilNow - TotalPaid;
+
+        /// <summary>
+        /// Bu yılda yönetici muafiyeti olan aylar (1-12) - sadece bulunduğumuz aydan öncesi (geçmiş aylar).
+        /// UI'da "Yönetici" rozeti gösterilebilir.
+        /// </summary>
+        public List<int> ExemptMonths { get; set; } = [];
     }
 }
