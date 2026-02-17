@@ -29,7 +29,14 @@ namespace AptManagement.Infrastructure.Extensions
             var connectionString = configuration.GetConnectionString("DefaultConnection");
             services.AddDbContext<AptManagementContext>(db =>
             {
-                db.UseSqlServer(connectionString);
+                db.UseSqlServer(connectionString, options =>
+                {
+                    options.EnableRetryOnFailure(
+                        maxRetryCount: 5,
+                        maxRetryDelay: TimeSpan.FromSeconds(10),
+                        errorNumbersToAdd: null
+                    );
+                });
             });
 
             // FluentValidation - Assembly taraması yerine sadece belirli validator tipini kullan  

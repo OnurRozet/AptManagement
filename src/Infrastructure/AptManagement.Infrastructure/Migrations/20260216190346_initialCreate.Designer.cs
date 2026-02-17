@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace AptManagement.Infrastructure.Migrations
 {
     [DbContext(typeof(AptManagementContext))]
-    [Migration("20260128151531_removeBankStatement")]
-    partial class removeBankStatement
+    [Migration("20260216190346_initialCreate")]
+    partial class initialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -34,6 +34,7 @@ namespace AptManagement.Infrastructure.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<decimal>("Balance")
+                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<int>("CreatedBy")
@@ -59,6 +60,7 @@ namespace AptManagement.Infrastructure.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<decimal>("OpeningBalance")
+                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<string>("OwnerName")
@@ -81,142 +83,6 @@ namespace AptManagement.Infrastructure.Migrations
                     b.HasData(
                         new
                         {
-                            Id = 1,
-                            Balance = 0m,
-                            CreatedBy = 0,
-                            CreatedDate = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            DeletedBy = 0,
-                            DeletedDate = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            IsDeleted = false,
-                            IsManager = false,
-                            Label = "Dükkan",
-                            OpeningBalance = 0m,
-                            OwnerName = "Fatma Uğur",
-                            TenantName = "Kaan Ersöz (Getir Su Bayii)",
-                            UpdatedBy = 0,
-                            UpdatedDate = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified)
-                        },
-                        new
-                        {
-                            Id = 2,
-                            Balance = 0m,
-                            CreatedBy = 0,
-                            CreatedDate = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            DeletedBy = 0,
-                            DeletedDate = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            IsDeleted = false,
-                            IsManager = false,
-                            Label = "Daire 2",
-                            OpeningBalance = 0m,
-                            OwnerName = "Eray Şişman",
-                            TenantName = "Begümsu Güller",
-                            UpdatedBy = 0,
-                            UpdatedDate = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified)
-                        },
-                        new
-                        {
-                            Id = 3,
-                            Balance = 0m,
-                            CreatedBy = 0,
-                            CreatedDate = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            DeletedBy = 0,
-                            DeletedDate = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            IsDeleted = false,
-                            IsManager = false,
-                            Label = "Daire 3",
-                            OpeningBalance = 0m,
-                            OwnerName = "İhsan Esen",
-                            TenantName = "Serhat Vardar",
-                            UpdatedBy = 0,
-                            UpdatedDate = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified)
-                        },
-                        new
-                        {
-                            Id = 4,
-                            Balance = 0m,
-                            CreatedBy = 0,
-                            CreatedDate = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            DeletedBy = 0,
-                            DeletedDate = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            IsDeleted = false,
-                            IsManager = false,
-                            Label = "Daire 4",
-                            OpeningBalance = 0m,
-                            OwnerName = "Şaban Karadeniz",
-                            TenantName = "Hasan Alcay",
-                            UpdatedBy = 0,
-                            UpdatedDate = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified)
-                        },
-                        new
-                        {
-                            Id = 5,
-                            Balance = 0m,
-                            CreatedBy = 0,
-                            CreatedDate = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            DeletedBy = 0,
-                            DeletedDate = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            IsDeleted = false,
-                            IsManager = false,
-                            Label = "Daire 5",
-                            OpeningBalance = 0m,
-                            OwnerName = "İlknur Oran",
-                            TenantName = "",
-                            UpdatedBy = 0,
-                            UpdatedDate = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified)
-                        },
-                        new
-                        {
-                            Id = 6,
-                            Balance = 0m,
-                            CreatedBy = 0,
-                            CreatedDate = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            DeletedBy = 0,
-                            DeletedDate = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            IsDeleted = false,
-                            IsManager = false,
-                            Label = "Daire 6",
-                            OpeningBalance = 0m,
-                            OwnerName = "Şenol Baykal",
-                            TenantName = "",
-                            UpdatedBy = 0,
-                            UpdatedDate = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified)
-                        },
-                        new
-                        {
-                            Id = 7,
-                            Balance = 0m,
-                            CreatedBy = 0,
-                            CreatedDate = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            DeletedBy = 0,
-                            DeletedDate = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            IsDeleted = false,
-                            IsManager = false,
-                            Label = "Daire 7",
-                            OpeningBalance = 0m,
-                            OwnerName = "Kadir Özer",
-                            TenantName = "",
-                            UpdatedBy = 0,
-                            UpdatedDate = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified)
-                        },
-                        new
-                        {
-                            Id = 8,
-                            Balance = 0m,
-                            CreatedBy = 0,
-                            CreatedDate = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            DeletedBy = 0,
-                            DeletedDate = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            IsDeleted = false,
-                            IsManager = false,
-                            Label = "Daire 8",
-                            OpeningBalance = 0m,
-                            OwnerName = "Abdulkadir Cebecioğlu",
-                            TenantName = "",
-                            UpdatedBy = 0,
-                            UpdatedDate = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified)
-                        },
-                        new
-                        {
                             Id = 9,
                             Balance = 0m,
                             CreatedBy = 0,
@@ -227,93 +93,7 @@ namespace AptManagement.Infrastructure.Migrations
                             IsManager = true,
                             Label = "Daire 9",
                             OpeningBalance = 0m,
-                            OwnerName = "Onur Rözet",
-                            TenantName = "",
-                            UpdatedBy = 0,
-                            UpdatedDate = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified)
-                        },
-                        new
-                        {
-                            Id = 10,
-                            Balance = 0m,
-                            CreatedBy = 0,
-                            CreatedDate = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            DeletedBy = 0,
-                            DeletedDate = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            IsDeleted = false,
-                            IsManager = false,
-                            Label = "Daire 10",
-                            OpeningBalance = 0m,
-                            OwnerName = "Abdulkadir Cebecioğlu",
-                            TenantName = "",
-                            UpdatedBy = 0,
-                            UpdatedDate = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified)
-                        },
-                        new
-                        {
-                            Id = 11,
-                            Balance = 0m,
-                            CreatedBy = 0,
-                            CreatedDate = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            DeletedBy = 0,
-                            DeletedDate = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            IsDeleted = false,
-                            IsManager = false,
-                            Label = "Daire 11",
-                            OpeningBalance = 0m,
-                            OwnerName = "Cem Bey",
-                            TenantName = "Reyhan Özer",
-                            UpdatedBy = 0,
-                            UpdatedDate = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified)
-                        },
-                        new
-                        {
-                            Id = 12,
-                            Balance = 0m,
-                            CreatedBy = 0,
-                            CreatedDate = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            DeletedBy = 0,
-                            DeletedDate = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            IsDeleted = false,
-                            IsManager = false,
-                            Label = "Daire 12",
-                            OpeningBalance = 0m,
-                            OwnerName = "Erkan Şimşek",
-                            TenantName = "Kiracı",
-                            UpdatedBy = 0,
-                            UpdatedDate = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified)
-                        },
-                        new
-                        {
-                            Id = 13,
-                            Balance = 0m,
-                            CreatedBy = 0,
-                            CreatedDate = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            DeletedBy = 0,
-                            DeletedDate = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            IsDeleted = false,
-                            IsManager = false,
-                            Label = "Daire 13",
-                            OpeningBalance = 0m,
-                            OwnerName = "Menekşe Yalçın",
-                            TenantName = "Enes Şengül",
-                            UpdatedBy = 0,
-                            UpdatedDate = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified)
-                        },
-                        new
-                        {
-                            Id = 14,
-                            Balance = 0m,
-                            CreatedBy = 0,
-                            CreatedDate = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            DeletedBy = 0,
-                            DeletedDate = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            IsDeleted = false,
-                            IsManager = false,
-                            Label = "Daire 14",
-                            OpeningBalance = 0m,
-                            OwnerName = "Emine Erten",
-                            TenantName = "",
+                            OwnerName = "Onur Rozet",
                             UpdatedBy = 0,
                             UpdatedDate = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified)
                         });
@@ -328,6 +108,7 @@ namespace AptManagement.Infrastructure.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<decimal>("Amount")
+                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<int>("ApartmentId")
@@ -361,6 +142,7 @@ namespace AptManagement.Infrastructure.Migrations
                         .HasColumnType("bit");
 
                     b.Property<decimal>("PaidAmount")
+                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<int>("UpdatedBy")
@@ -456,6 +238,28 @@ namespace AptManagement.Infrastructure.Migrations
                         .HasFilter("[NormalizedUserName] IS NOT NULL");
 
                     b.ToTable("Users", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("a1b2c3d4-e5f6-4a5b-8c9d-0e1f2a3b4c5d"),
+                            AccessFailedCount = 0,
+                            ApartmentId = 9,
+                            ApartmentNumber = "9",
+                            ConcurrencyStamp = "1",
+                            Email = "admin@siteyonetimi.com",
+                            EmailConfirmed = true,
+                            FullName = "Onur Rozet",
+                            IsManager = true,
+                            LockoutEnabled = false,
+                            NormalizedEmail = "ADMIN@SITEYONETIMI.COM",
+                            NormalizedUserName = "9",
+                            PasswordHash = "AQAAAAIAAYagAAAAEN5dvYMMZR6e5oz/fyUG3oXS13RiNNwFOvZf2iJQsQ+mham0nOtxYU0uBqjwHKIQhg==",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "A7D5C6E8-B9F2-4E1D-8C9A-0B1C2D3E4F5G",
+                            TwoFactorEnabled = false,
+                            UserName = "9"
+                        });
                 });
 
             modelBuilder.Entity("AptManagement.Domain.Entities.DuesSetting", b =>
@@ -467,6 +271,7 @@ namespace AptManagement.Infrastructure.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<decimal>("Amount")
+                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<int>("CreatedBy")
@@ -516,6 +321,7 @@ namespace AptManagement.Infrastructure.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<decimal>("Amount")
+                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<int>("CreatedBy")
@@ -608,6 +414,7 @@ namespace AptManagement.Infrastructure.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<decimal>("Amount")
+                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<int>("ApartmentId")
@@ -705,6 +512,7 @@ namespace AptManagement.Infrastructure.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<decimal>("AllocatedAmount")
+                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<int>("ApartmentDebtId")
@@ -817,6 +625,15 @@ namespace AptManagement.Infrastructure.Migrations
                         .HasFilter("[NormalizedName] IS NOT NULL");
 
                     b.ToTable("Roles", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("b2c3d4e5-f6a7-5b6c-9d0e-1f2a3b4c5d6e"),
+                            ConcurrencyStamp = "1",
+                            Name = "Admin",
+                            NormalizedName = "ADMIN"
+                        });
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<System.Guid>", b =>
@@ -901,6 +718,13 @@ namespace AptManagement.Infrastructure.Migrations
                     b.HasIndex("RoleId");
 
                     b.ToTable("AspNetUserRoles", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            UserId = new Guid("a1b2c3d4-e5f6-4a5b-8c9d-0e1f2a3b4c5d"),
+                            RoleId = new Guid("b2c3d4e5-f6a7-5b6c-9d0e-1f2a3b4c5d6e")
+                        });
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<System.Guid>", b =>
@@ -985,7 +809,7 @@ namespace AptManagement.Infrastructure.Migrations
                     b.HasOne("AptManagement.Domain.Entities.Income", "Income")
                         .WithMany("Allocations")
                         .HasForeignKey("IncomeId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.Navigation("ApartmentDebt");

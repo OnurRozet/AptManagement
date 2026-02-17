@@ -24,6 +24,7 @@ namespace AptManagement.Application.Services
         IRepository<ApartmentDebt> debtRepo,
         IRepository<IncomeDebtAllocation> allocationDebtRepo,
         IRepository<DuesSetting> duesRepo,
+        IRepository<ManagementPeriod> managementPeriodRepo,
         IMapper mapper,
         IValidator<Income> validator,
         IUnitOfWork unitOfWork) : IIncomeService
@@ -45,44 +46,24 @@ namespace AptManagement.Application.Services
                 // --- GÜNCELLEME (EDIT) SENARYOSU ---
                 if (income.Id > 0)
                 {
-                    var existingIncome = await repository.GetByIdAsync(income.Id);
+                    var existingIncome = await repository.GetAll()
+                        .FirstOrDefaultAsync(x => x.Id == income.Id);
+
                     if (existingIncome == null) return ServiceResult<CreateOrEditResponse>.Error("Kayıt bulunamadı.");
 
-                    var specificDebt = await debtRepo.GetAll()
-                    .Where(x => x.PaidAmount > 0)
-                        .OrderByDescending(x => x.DueDate) // En yakın tarihli borçu al
-                        .FirstOrDefaultAsync(x => x.ApartmentId == income.ApartmentId);
+                    // 1. Eski tahsisleri geri al (yanlış daireye eklenmiş ödemeler de dahil)
+                    // Böylece daire veya tutar değiştiğinde aidat takibi doğru güncellenir
+                    await RevertIncomeAllocationsAsync(existingIncome);
 
-                    if (specificDebt != null)
-                    {
-                        // Eski ödemeyi geri al
-                        specificDebt.PaidAmount -= existingIncome.Amount;
-
-                        // Yeni tutarı ekle 
-                        specificDebt.PaidAmount += income.Amount;
-
-                        // Eğer ödenen tutar borçtan fazlaysa sadece borç kadarını yaz.
-                        decimal remaningMoney = 0;
-                        if (specificDebt.PaidAmount > specificDebt.Amount)
-                        {
-                            remaningMoney = specificDebt.PaidAmount - specificDebt.Amount;
-                            specificDebt.PaidAmount = specificDebt.Amount;
-                        }
-
-                        specificDebt.IsClosed = specificDebt.PaidAmount >= specificDebt.Amount;
-                        debtRepo.Update(specificDebt);
-
-
-                        // Parayı al ve borçlara sırasıyla dağıt
-                        await DistributePaymentToDebtsAsync(income.Id, income.ApartmentId, income.IncomeDate,
-                            remaningMoney);
-                    }
-
+                    // 2. Gelir kaydını güncelle (yeni daire, tutar vb.)
                     mapper.Map(request, existingIncome);
                     repository.Update(existingIncome);
 
+                    // 3. Ödemeyi (doğru) dairenin borçlarına yeniden dağıt
+                    await DistributePaymentToDebtsAsync(existingIncome.Id, existingIncome.ApartmentId, existingIncome.IncomeDate, existingIncome.Amount);
+
                     return ServiceResult<CreateOrEditResponse>.Success(new CreateOrEditResponse { ID = income.Id },
-                        "Güncellendi.");
+                        "Güncellendi. Aidat takibi yeni daireye göre düzeltildi.");
                 }
 
                 // --- YENİ KAYIT (CREATE) SENARYOSU ---
@@ -218,18 +199,50 @@ namespace AptManagement.Application.Services
             var currentYear = DateTime.Now.Year;
             var currentMonth = DateTime.Now.Month;
 
+            var yearStart = new DateTime(year, 1, 1);
+            var yearEnd = new DateTime(year, 12, 31);
+
+            // Bu yılla kesişen tüm yönetici muafiyet dönemleri (aktif + geçmiş - eski yöneticiler dahil)
+            var exemptPeriods = await managementPeriodRepo.GetAll()
+                .Where(mp => mp.IsExemptFromDues &&
+                            mp.StartDate <= yearEnd &&
+                            (mp.EndDate == null || mp.EndDate >= yearStart))
+                .Select(mp => new { mp.ApartmentId, mp.StartDate, mp.EndDate })
+                .ToListAsync();
+
             var rawData = await apartmentRepo.GetAll()
-                .Where(x => !x.IsManager)
                 .AsNoTracking()
                 .Select(apt => new
                 {
                     Apt = apt,
-                    YearlyDebts = apt.Debts.Where(d => d.DueDate.Year == year).ToList() // Sadece o yılın borçlarını RAM'e al
+                    YearlyDebts = apt.Debts.Where(d => d.DueDate.Year == year).ToList()
                 })
                 .ToListAsync();
 
             var dues = await duesRepo.GetAll().Where(x => x.StartDate.Year == year && x.IsActive).ToListAsync();
 
+            // Daire bazında bu yılda muaf olunan ayları hesapla - sadece bulunduğumuz aydan öncesi (geçmiş aylar)
+            static List<int> GetExemptMonths(int apartmentId, int y, int currentY, int currentM, IEnumerable<(int ApartmentId, DateTime StartDate, DateTime? EndDate)> periods)
+            {
+                var result = new List<int>();
+                for (int m = 1; m <= 12; m++)
+                {
+                    // Sadece geçmiş aylar: (yıl < şimdi) veya (aynı yıl ve ay < şimdiki ay)
+                    bool isPastMonth = y < currentY || (y == currentY && m < currentM);
+                    if (!isPastMonth) continue;
+
+                    var monthStart = new DateTime(y, m, 1);
+                    var monthEnd = m == 2 ? new DateTime(y, 2, 28) : new DateTime(y, m, 30);
+                    var inExemptPeriod = periods.Any(p =>
+                        p.ApartmentId == apartmentId &&
+                        p.StartDate <= monthEnd &&
+                        (p.EndDate == null || p.EndDate >= monthStart));
+                    if (inExemptPeriod) result.Add(m);
+                }
+                return result;
+            }
+
+            var periodsList = exemptPeriods.Select(p => (p.ApartmentId, p.StartDate, p.EndDate)).ToList();
 
             var matrix = rawData.Select(item => new PaymentMatrixDto
             {
@@ -237,6 +250,7 @@ namespace AptManagement.Application.Services
                 ApartmentLabel = item.Apt.Label,
                 OwnerName = item.Apt.OwnerName,
                 IsManager = item.Apt.IsManager,
+                ExemptMonths = GetExemptMonths(item.Apt.Id, year, currentYear, currentMonth, periodsList),
 
                 // LINQ to Objects (RAM'de çalışır, çok hızlıdır)
                 Jan = item.YearlyDebts.Where(x => x.DueDate.Month == 1 && x.DebtType != DebtType.TransferFromPast).Sum(x => x.PaidAmount),
@@ -252,7 +266,7 @@ namespace AptManagement.Application.Services
                 Nov = item.YearlyDebts.Where(x => x.DueDate.Month == 11 && x.DebtType != DebtType.TransferFromPast).Sum(x => x.PaidAmount),
                 Dec = item.YearlyDebts.Where(x => x.DueDate.Month == 12 && x.DebtType != DebtType.TransferFromPast).Sum(x => x.PaidAmount),
 
-                TotalYearlyDebt = item.YearlyDebts.Where(x => x.DebtType != DebtType.TransferFromPast).Sum(x => x.Amount),
+                TotalYearlyDebt = item.YearlyDebts.Where(x => x.DebtType != DebtType.TransferFromPast).Sum(x => x.Amount-x.PaidAmount),
                 TotalPaid = item.YearlyDebts.Sum(x => x.PaidAmount),
                 TransferredDebt = item.YearlyDebts
                         .Where(x => x.DebtType == Domain.Enums.DebtType.TransferFromPast)
@@ -303,6 +317,45 @@ namespace AptManagement.Application.Services
                 SearchResult = filteredQuery.ToList(),
                 TotalItemCount = query.Count()
             });
+        }
+
+        /// <summary>
+        /// Gelirin eski tahsislerini geri alır (yanlış daireye eklenen ödemeleri düzeltmek için).
+        /// Eski dairenin borçlarındaki PaidAmount düşürülür, fazla ödeme Balance'a gitmişse o da geri alınır.
+        /// </summary>
+        private async Task RevertIncomeAllocationsAsync(Income income)
+        {
+            var allocations = await allocationDebtRepo.GetAll(a => a.ApartmentDebt)
+                .Where(a => a.IncomeId == income.Id)
+                .ToListAsync();
+
+            decimal totalAllocated = 0;
+
+            foreach (var allocation in allocations)
+            {
+                var debt = allocation.ApartmentDebt;
+                totalAllocated += allocation.AllocatedAmount;
+
+                debt.PaidAmount -= allocation.AllocatedAmount;
+                if (debt.PaidAmount < 0) debt.PaidAmount = 0;
+                debt.IsClosed = debt.PaidAmount >= debt.Amount;
+                debtRepo.Update(debt);
+
+                allocationDebtRepo.Delete(allocation);
+            }
+
+            // Fazla ödeme (borçlara dağıtılmayan kısım) eski dairenin Balance'ına gitmişti; geri al
+            decimal amountToRevertFromBalance = income.Amount - totalAllocated;
+            if (amountToRevertFromBalance > 0)
+            {
+                var oldApartment = await apartmentRepo.GetByIdAsync(income.ApartmentId);
+                if (oldApartment != null)
+                {
+                    oldApartment.Balance -= amountToRevertFromBalance;
+                    if (oldApartment.Balance < 0) oldApartment.Balance = 0;
+                    apartmentRepo.Update(oldApartment);
+                }
+            }
         }
 
         private async Task DistributePaymentToDebtsAsync(int incomeId, int apartmentId, DateTime incomeDate,

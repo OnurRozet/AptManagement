@@ -1,4 +1,4 @@
-﻿using AptManagement.Domain.Entities;
+using AptManagement.Domain.Entities;
 using AptManagement.Domain.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -44,18 +44,27 @@ namespace AptManagement.Application.Services
 
                             if (!isAlreadyCreated)
                             {
-                                // 3. 12 aylık borç kaydı oluştur
                                 var debts = new List<ApartmentDebt>();
-                                var managerApt = await managementPeriod.GetAll().Where(x => x.ApartmentId == apt.Id).FirstOrDefaultAsync();
+                                // Daire için bu yılla kesişen aktif yönetim dönemi (IsExemptFromDues'a göre muafiyet)
+                                var periodForApt = await managementPeriod.GetAll()
+                                    .Where(x => x.ApartmentId == apt.Id && x.IsActive &&
+                                                x.StartDate.Year <= currentYear &&
+                                                (x.EndDate == null || x.EndDate.Value.Year >= currentYear))
+                                    .FirstOrDefaultAsync();
+
                                 for (int month = 1; month <= 12; month++)
                                 {
                                     var dueDate = month == 2 ? new DateTime(currentYear, month, 28) : new DateTime(currentYear, month, 30);
-                                    
-                                    // Yönetici muafiyeti kontrolü: StartDate ve EndDate arasındaki aylar için muafiyet uygula
-                                    bool isExempt = managerApt != null && 
-                                                   dueDate >= managerApt.StartDate && 
-                                                   dueDate <= managerApt.EndDate;
-                                    
+
+                                    // Aidattan muaf mı: EndDate'in olduğu ay dahil muaf (EndDate 15 Haziran ise Haziran tamamen muaf)
+                                    var effectiveEndDate = periodForApt.EndDate.HasValue
+                                        ? new DateTime(periodForApt.EndDate!.Value.Year, periodForApt.EndDate.Value.Month, DateTime.DaysInMonth(periodForApt.EndDate.Value.Year, periodForApt.EndDate.Value.Month))
+                                        : new DateTime(currentYear, 12, 31);
+                                    bool isExempt = periodForApt != null &&
+                                                    periodForApt.IsExemptFromDues &&
+                                                    dueDate >= periodForApt.StartDate &&
+                                                    dueDate <= effectiveEndDate;
+
                                     if (isExempt)
                                     {
                                         debts.Add(new ApartmentDebt
@@ -93,7 +102,7 @@ namespace AptManagement.Application.Services
                         }
                     }
                     // Her 24 saatte bir kontrol et
-                    await Task.Delay(TimeSpan.FromHours(24), stoppingToken);
+                    await Task.Delay(TimeSpan.FromMinutes(1), stoppingToken);
                 }
                 catch (Exception ex)
                 {

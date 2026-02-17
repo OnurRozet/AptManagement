@@ -1,4 +1,4 @@
-﻿using AptManagement.Domain.Common;
+using AptManagement.Domain.Common;
 using AptManagement.Domain.Interfaces;
 using AptManagement.Infrastructure.Context;
 using Microsoft.EntityFrameworkCore;
@@ -75,9 +75,23 @@ namespace AptManagement.Infrastructure.Repositories
             entity.UpdatedDate =
                 TimeZoneInfo.ConvertTime(DateTime.UtcNow, TimeZoneInfo.FindSystemTimeZoneById("Europe/Istanbul"));
             entity.UpdatedBy = 1;
-            db.Entry(entity).State = EntityState.Modified;
-            db.Entry(entity).Property(x => x.CreatedBy).IsModified = false;
-            db.Entry(entity).Property(x => x.CreatedDate).IsModified = false;
+
+            var trackedEntity = db.Set<T>().Local.FirstOrDefault(e => e.Id == entity.Id);
+            if (trackedEntity != null)
+            {
+                // Aynı Id'li entity zaten tracker'da - yeni instance attach etmek "duplicate key" hatası verir.
+                // Bunun yerine tracked entity'nin değerlerini güncel entity'den kopyala.
+                db.Entry(trackedEntity).CurrentValues.SetValues(entity);
+                db.Entry(trackedEntity).Property(x => x.CreatedBy).IsModified = false;
+                db.Entry(trackedEntity).Property(x => x.CreatedDate).IsModified = false;
+            }
+            else
+            {
+                db.Entry(entity).State = EntityState.Modified;
+                db.Entry(entity).Property(x => x.CreatedBy).IsModified = false;
+                db.Entry(entity).Property(x => x.CreatedDate).IsModified = false;
+            }
+
             db.SaveChanges();
         }
     }

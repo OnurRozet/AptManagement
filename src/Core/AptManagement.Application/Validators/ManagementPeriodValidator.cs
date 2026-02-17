@@ -14,8 +14,10 @@ namespace AptManagement.Application.Validators
         {
             RuleFor(x => x.ApartmentId).NotEmpty().GreaterThan(0).WithMessage("Daire seçilmelidir");
             RuleFor(x => x.StartDate).NotEmpty().WithMessage("Başlangıç tarihi boş olamaz");
-            RuleFor(x => x.EndDate).NotEmpty().WithMessage("Bitiş tarihi boş olamaz");
-            RuleFor(x => x.EndDate).GreaterThan(x => x.StartDate).WithMessage("Bitiş tarihi başlangıç tarihinden sonra olmalıdır");
+            RuleFor(x => x.EndDate)
+                .GreaterThan(x => x.StartDate)
+                .When(x => x.EndDate.HasValue)
+                .WithMessage("Bitiş tarihi başlangıç tarihinden sonra olmalıdır");
         }
     }
 }
