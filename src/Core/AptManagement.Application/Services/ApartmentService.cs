@@ -22,7 +22,7 @@ using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace AptManagement.Application.Services
 {
-    public class ApartmentService(IUnitOfWork unitOfWork, IRepository<Apartment> repository, IRepository<ApartmentDebt> debtRepo ,IMapper mapper, IValidator<Apartment> validator) : IApartmentService
+    public class ApartmentService(IUnitOfWork unitOfWork, IRepository<Apartment> repository, IRepository<ApartmentDebt> debtRepo, IMapper mapper, IValidator<Apartment> validator) : IApartmentService
     {
         public async Task<ServiceResult<CreateOrEditResponse>> CreateOrEdit(ApartmentDto apartment)
         {
@@ -49,7 +49,7 @@ namespace AptManagement.Application.Services
 
                 await repository.CreateAsync(newApartment);
 
-                if(newApartment.OpeningBalance < 0)
+                if (newApartment.OpeningBalance < 0)
                 {
                     await CreateTransferDebtAsync(newApartment.Id, newApartment.OpeningBalance);
                 }
@@ -82,7 +82,8 @@ namespace AptManagement.Application.Services
                     OwnerName = x.OwnerName,
                     TenantName = x.TenantName,
                     Balance = x.Balance,
-                    OpeningBalance= x.Debts.Where(x=>x.DebtType == DebtType.TransferFromPast).Sum(x=>x.Amount - x.PaidAmount),
+                    IsManager = x.IsManager,
+                    OpeningBalance = x.Debts.Where(x => x.DebtType == DebtType.TransferFromPast).Sum(x => x.Amount - x.PaidAmount),
                 })
                 .OrderBy(x => x.Id)
                 .ToPagedList(request.Page, (int)request.PageSize);
@@ -130,7 +131,7 @@ namespace AptManagement.Application.Services
                     await debtRepo.CreateAsync(transferDebt);
                 }
 
-                return ServiceResult<bool>.Success(result:true,"Açılış bakiyesi ve devir borcu tanımlandı.");
+                return ServiceResult<bool>.Success(result: true, "Açılış bakiyesi ve devir borcu tanımlandı.");
             });
         }
 
@@ -153,7 +154,7 @@ namespace AptManagement.Application.Services
                 var skippedCount = request.Count - newDtos.Count;
 
                 if (newDtos.Count == 0)
-                    return ServiceResult<CreateOrEditResponse>.Success(new CreateOrEditResponse(), 
+                    return ServiceResult<CreateOrEditResponse>.Success(new CreateOrEditResponse(),
                         $"Tüm daireler zaten sistemde kayıtlı. {skippedCount} daire atlandı.");
 
                 var apartments = mapper.Map<List<Apartment>>(newDtos);
@@ -292,7 +293,7 @@ namespace AptManagement.Application.Services
 
                         // İlk sayfayı al
                         var worksheet = package.Workbook.Worksheets[0];
-                        
+
                         // Dimension kontrolü
                         if (worksheet.Dimension == null)
                             return ServiceResult<List<ApartmentDto>>.Error("Excel dosyası boş görünüyor.");
